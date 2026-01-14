@@ -1,0 +1,947 @@
+[
+  {
+    "card_id": "闪电-spade-1-0",
+    "name": "闪电",
+    "suit": "spade",
+    "rank": 1,
+    "type": "delayed",
+    "description": "出牌阶段，对自己使用。判定阶段进行判定：若为黑桃2~9，则你受到3点雷电伤害；否则将此牌移动到下家的判定区。",
+    "image": "闪电.jpg"
+  },
+  {
+    "card_id": "雌雄双股剑-spade-2-1",
+    "name": "雌雄双股剑",
+    "suit": "spade",
+    "rank": 2,
+    "type": "equip",
+    "description": "你使用【杀】指定一名异性角色为目标后，你可以令其选择一项：1.弃置一张手牌；2.令你摸一张牌。",
+    "image": "雌雄双股剑.jpg"
+  },
+  {
+    "card_id": "八卦阵-spade-2-2",
+    "name": "八卦阵",
+    "suit": "spade",
+    "rank": 2,
+    "type": "equip",
+    "description": "每当你需要使用或打出【闪】时，你可以进行判定：若结果为红色，视为你使用或打出了一张【闪】。",
+    "image": "八卦阵.jpg"
+  },
+  {
+    "card_id": "过河拆桥-spade-3-3",
+    "name": "过河拆桥",
+    "suit": "spade",
+    "rank": 3,
+    "type": "scroll",
+    "description": "出牌阶段，对一名区域里有牌的其他角色使用。你弃置其区域里的一张牌。",
+    "image": "过河拆桥.jpg"
+  },
+  {
+    "card_id": "过河拆桥-spade-4-4",
+    "name": "过河拆桥",
+    "suit": "spade",
+    "rank": 4,
+    "type": "scroll",
+    "description": "出牌阶段，对一名区域里有牌的其他角色使用。你弃置其区域里的一张牌。",
+    "image": "过河拆桥.jpg"
+  },
+  {
+    "card_id": "青龙偃月刀-spade-5-5",
+    "name": "青龙偃月刀",
+    "suit": "spade",
+    "rank": 5,
+    "type": "equip",
+    "description": "你使用【杀】被【闪】抵消时，你可以对相同目标再使用一张【杀】。",
+    "image": "青龙偃月刀.jpg"
+  },
+  {
+    "card_id": "绝影-spade-5-6",
+    "name": "绝影",
+    "suit": "spade",
+    "rank": 5,
+    "type": "equip",
+    "description": "锁定技，其他角色计算与你的距离+1。",
+    "image": "绝影.jpg"
+  },
+  {
+    "card_id": "青釭剑-spade-6-7",
+    "name": "青釭剑",
+    "suit": "spade",
+    "rank": 6,
+    "type": "equip",
+    "description": "锁定技，你使用【杀】时，无视目标角色的防具。",
+    "image": "青釭剑.jpg"
+  },
+  {
+    "card_id": "乐不思蜀-spade-6-8",
+    "name": "乐不思蜀",
+    "suit": "spade",
+    "rank": 6,
+    "type": "delayed",
+    "description": "出牌阶段，对一名其他角色使用。判定阶段进行判定：若为红桃，则失效；否则跳过其出牌阶段。",
+    "image": "乐不思蜀.jpg"
+  },
+  {
+    "card_id": "杀-spade-7-9",
+    "name": "杀",
+    "suit": "spade",
+    "rank": 7,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "南蛮入侵-spade-7-10",
+    "name": "南蛮入侵",
+    "suit": "spade",
+    "rank": 7,
+    "type": "scroll",
+    "description": "出牌阶段，对所有其他角色使用。每名角色需打出一张【杀】，否则受到1点伤害。",
+    "image": "南蛮入侵.jpg"
+  },
+  {
+    "card_id": "杀-spade-8-11",
+    "name": "杀",
+    "suit": "spade",
+    "rank": 8,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "杀-spade-8-12",
+    "name": "杀",
+    "suit": "spade",
+    "rank": 8,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "杀-spade-9-13",
+    "name": "杀",
+    "suit": "spade",
+    "rank": 9,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "杀-spade-9-14",
+    "name": "杀",
+    "suit": "spade",
+    "rank": 9,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "杀-spade-10-15",
+    "name": "杀",
+    "suit": "spade",
+    "rank": 10,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "杀-spade-10-16",
+    "name": "杀",
+    "suit": "spade",
+    "rank": 10,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "无懈可击-spade-11-17",
+    "name": "无懈可击",
+    "suit": "spade",
+    "rank": 11,
+    "type": "scroll",
+    "description": "抵消一张锦囊牌的效果。",
+    "image": "无懈可击.jpg"
+  },
+  {
+    "card_id": "顺手牵羊-spade-11-18",
+    "name": "顺手牵羊",
+    "suit": "spade",
+    "rank": 11,
+    "type": "scroll",
+    "description": "出牌阶段，对距离为1的一名区域里有牌的其他角色使用。你获得其区域里的一张牌。",
+    "image": "顺手牵羊.jpg"
+  },
+  {
+    "card_id": "过河拆桥-spade-12-19",
+    "name": "过河拆桥",
+    "suit": "spade",
+    "rank": 12,
+    "type": "scroll",
+    "description": "出牌阶段，对一名区域里有牌的其他角色使用。你弃置其区域里的一张牌。",
+    "image": "过河拆桥.jpg"
+  },
+  {
+    "card_id": "丈八蛇矛-spade-12-20",
+    "name": "丈八蛇矛",
+    "suit": "spade",
+    "rank": 12,
+    "type": "equip",
+    "description": "你可以将两张手牌当【杀】使用。",
+    "image": "丈八蛇矛.jpg"
+  },
+  {
+    "card_id": "南蛮入侵-spade-13-21",
+    "name": "南蛮入侵",
+    "suit": "spade",
+    "rank": 13,
+    "type": "scroll",
+    "description": "出牌阶段，对所有其他角色使用。每名角色需打出一张【杀】，否则受到1点伤害。",
+    "image": "南蛮入侵.jpg"
+  },
+  {
+    "card_id": "大宛-spade-13-22",
+    "name": "大宛",
+    "suit": "spade",
+    "rank": 13,
+    "type": "equip",
+    "description": "锁定技，你计算与其他角色的距离-1。",
+    "image": "大宛.jpg"
+  },
+  {
+    "card_id": "桃园结义-heart-1-23",
+    "name": "桃园结义",
+    "suit": "heart",
+    "rank": 1,
+    "type": "scroll",
+    "description": "出牌阶段，所有角色各恢复1点体力。",
+    "image": "桃园结义.jpg"
+  },
+  {
+    "card_id": "万箭齐发-heart-1-24",
+    "name": "万箭齐发",
+    "suit": "heart",
+    "rank": 1,
+    "type": "scroll",
+    "description": "出牌阶段，对所有其他角色使用。每名角色需打出一张【闪】，否则受到1点伤害。",
+    "image": "万箭齐发.jpg"
+  },
+  {
+    "card_id": "闪-heart-2-25",
+    "name": "闪",
+    "suit": "heart",
+    "rank": 2,
+    "type": "basic",
+    "description": "抵消一张【杀】。",
+    "image": "闪.jpg"
+  },
+  {
+    "card_id": "闪-heart-2-26",
+    "name": "闪",
+    "suit": "heart",
+    "rank": 2,
+    "type": "basic",
+    "description": "抵消一张【杀】。",
+    "image": "闪.jpg"
+  },
+  {
+    "card_id": "桃-heart-3-27",
+    "name": "桃",
+    "suit": "heart",
+    "rank": 3,
+    "type": "basic",
+    "description": "出牌阶段，为你恢复1点体力；或有人处于濒死状态时，对其使用，恢复1点体力。",
+    "image": "桃.jpg"
+  },
+  {
+    "card_id": "五谷丰登-heart-3-28",
+    "name": "五谷丰登",
+    "suit": "heart",
+    "rank": 3,
+    "type": "scroll",
+    "description": "出牌阶段，亮出等同于现存角色数量的牌，每名角色按行动顺序从里面选择并获得一张牌。",
+    "image": "五谷丰登.jpg"
+  },
+  {
+    "card_id": "桃-heart-4-29",
+    "name": "桃",
+    "suit": "heart",
+    "rank": 4,
+    "type": "basic",
+    "description": "出牌阶段，为你恢复1点体力；或有人处于濒死状态时，对其使用，恢复1点体力。",
+    "image": "桃.jpg"
+  },
+  {
+    "card_id": "五谷丰登-heart-4-30",
+    "name": "五谷丰登",
+    "suit": "heart",
+    "rank": 4,
+    "type": "scroll",
+    "description": "出牌阶段，亮出等同于现存角色数量的牌，每名角色按行动顺序从里面选择并获得一张牌。",
+    "image": "五谷丰登.jpg"
+  },
+  {
+    "card_id": "麒麟弓-heart-5-31",
+    "name": "麒麟弓",
+    "suit": "heart",
+    "rank": 5,
+    "type": "equip",
+    "description": "你使用【杀】造成伤害时，你可以弃置目标角色装备区里的一张坐骑牌。",
+    "image": "麒麟弓.jpg"
+  },
+  {
+    "card_id": "赤兔-heart-5-32",
+    "name": "赤兔",
+    "suit": "heart",
+    "rank": 5,
+    "type": "equip",
+    "description": "锁定技，你计算与其他角色的距离-1。",
+    "image": "赤兔.jpg"
+  },
+  {
+    "card_id": "桃-heart-6-33",
+    "name": "桃",
+    "suit": "heart",
+    "rank": 6,
+    "type": "basic",
+    "description": "出牌阶段，为你恢复1点体力；或有人处于濒死状态时，对其使用，恢复1点体力。",
+    "image": "桃.jpg"
+  },
+  {
+    "card_id": "乐不思蜀-heart-6-34",
+    "name": "乐不思蜀",
+    "suit": "heart",
+    "rank": 6,
+    "type": "delayed",
+    "description": "出牌阶段，对一名其他角色使用。判定阶段进行判定：若为红桃，则失效；否则跳过其出牌阶段。",
+    "image": "乐不思蜀.jpg"
+  },
+  {
+    "card_id": "桃-heart-7-35",
+    "name": "桃",
+    "suit": "heart",
+    "rank": 7,
+    "type": "basic",
+    "description": "出牌阶段，为你恢复1点体力；或有人处于濒死状态时，对其使用，恢复1点体力。",
+    "image": "桃.jpg"
+  },
+  {
+    "card_id": "无中生有-heart-7-36",
+    "name": "无中生有",
+    "suit": "heart",
+    "rank": 7,
+    "type": "scroll",
+    "description": "出牌阶段，摸两张牌。",
+    "image": "无中生有.jpg"
+  },
+  {
+    "card_id": "桃-heart-8-37",
+    "name": "桃",
+    "suit": "heart",
+    "rank": 8,
+    "type": "basic",
+    "description": "出牌阶段，为你恢复1点体力；或有人处于濒死状态时，对其使用，恢复1点体力。",
+    "image": "桃.jpg"
+  },
+  {
+    "card_id": "无中生有-heart-8-38",
+    "name": "无中生有",
+    "suit": "heart",
+    "rank": 8,
+    "type": "scroll",
+    "description": "出牌阶段，摸两张牌。",
+    "image": "无中生有.jpg"
+  },
+  {
+    "card_id": "桃-heart-9-39",
+    "name": "桃",
+    "suit": "heart",
+    "rank": 9,
+    "type": "basic",
+    "description": "出牌阶段，为你恢复1点体力；或有人处于濒死状态时，对其使用，恢复1点体力。",
+    "image": "桃.jpg"
+  },
+  {
+    "card_id": "无中生有-heart-9-40",
+    "name": "无中生有",
+    "suit": "heart",
+    "rank": 9,
+    "type": "scroll",
+    "description": "出牌阶段，摸两张牌。",
+    "image": "无中生有.jpg"
+  },
+  {
+    "card_id": "杀-heart-10-41",
+    "name": "杀",
+    "suit": "heart",
+    "rank": 10,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "杀-heart-10-42",
+    "name": "杀",
+    "suit": "heart",
+    "rank": 10,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "杀-heart-11-43",
+    "name": "杀",
+    "suit": "heart",
+    "rank": 11,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "无中生有-heart-11-44",
+    "name": "无中生有",
+    "suit": "heart",
+    "rank": 11,
+    "type": "scroll",
+    "description": "出牌阶段，摸两张牌。",
+    "image": "无中生有.jpg"
+  },
+  {
+    "card_id": "桃-heart-12-45",
+    "name": "桃",
+    "suit": "heart",
+    "rank": 12,
+    "type": "basic",
+    "description": "出牌阶段，为你恢复1点体力；或有人处于濒死状态时，对其使用，恢复1点体力。",
+    "image": "桃.jpg"
+  },
+  {
+    "card_id": "过河拆桥-heart-12-46",
+    "name": "过河拆桥",
+    "suit": "heart",
+    "rank": 12,
+    "type": "scroll",
+    "description": "出牌阶段，对一名区域里有牌的其他角色使用。你弃置其区域里的一张牌。",
+    "image": "过河拆桥.jpg"
+  },
+  {
+    "card_id": "闪电-heart-12-47",
+    "name": "闪电",
+    "suit": "heart",
+    "rank": 12,
+    "type": "delayed",
+    "description": "出牌阶段，对自己使用。判定阶段进行判定：若为黑桃2~9，则你受到3点雷电伤害；否则将此牌移动到下家的判定区。",
+    "image": "闪电.jpg"
+  },
+  {
+    "card_id": "爪黄飞电-heart-13-48",
+    "name": "爪黄飞电",
+    "suit": "heart",
+    "rank": 13,
+    "type": "equip",
+    "description": "锁定技，其他角色计算与你的距离+1。",
+    "image": "爪黄飞电.jpg"
+  },
+  {
+    "card_id": "闪-heart-13-49",
+    "name": "闪",
+    "suit": "heart",
+    "rank": 13,
+    "type": "basic",
+    "description": "抵消一张【杀】。",
+    "image": "闪.jpg"
+  },
+  {
+    "card_id": "决斗-club-1-50",
+    "name": "决斗",
+    "suit": "club",
+    "rank": 1,
+    "type": "scroll",
+    "description": "出牌阶段，对一名其他角色使用。由其开始，其与你轮流打出一张【杀】，直到有一方不打。不打【杀】的一方受到1点伤害。",
+    "image": "决斗.jpg"
+  },
+  {
+    "card_id": "诸葛连弩-club-1-51",
+    "name": "诸葛连弩",
+    "suit": "club",
+    "rank": 1,
+    "type": "equip",
+    "description": "锁定技，你使用【杀】无次数限制。",
+    "image": "诸葛连弩.jpg"
+  },
+  {
+    "card_id": "杀-club-2-52",
+    "name": "杀",
+    "suit": "club",
+    "rank": 2,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "八卦阵-club-2-53",
+    "name": "八卦阵",
+    "suit": "club",
+    "rank": 2,
+    "type": "equip",
+    "description": "每当你需要使用或打出【闪】时，你可以进行判定：若结果为红色，视为你使用或打出了一张【闪】。",
+    "image": "八卦阵.jpg"
+  },
+  {
+    "card_id": "仁王盾-club-2-54",
+    "name": "仁王盾",
+    "suit": "club",
+    "rank": 2,
+    "type": "equip",
+    "description": "锁定技，黑色【杀】对你无效。",
+    "image": "仁王盾.jpg"
+  },
+  {
+    "card_id": "杀-club-3-55",
+    "name": "杀",
+    "suit": "club",
+    "rank": 3,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "过河拆桥-club-3-56",
+    "name": "过河拆桥",
+    "suit": "club",
+    "rank": 3,
+    "type": "scroll",
+    "description": "出牌阶段，对一名区域里有牌的其他角色使用。你弃置其区域里的一张牌。",
+    "image": "过河拆桥.jpg"
+  },
+  {
+    "card_id": "杀-club-4-57",
+    "name": "杀",
+    "suit": "club",
+    "rank": 4,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "过河拆桥-club-4-58",
+    "name": "过河拆桥",
+    "suit": "club",
+    "rank": 4,
+    "type": "scroll",
+    "description": "出牌阶段，对一名区域里有牌的其他角色使用。你弃置其区域里的一张牌。",
+    "image": "过河拆桥.jpg"
+  },
+  {
+    "card_id": "杀-club-5-59",
+    "name": "杀",
+    "suit": "club",
+    "rank": 5,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "的卢-club-5-60",
+    "name": "的卢",
+    "suit": "club",
+    "rank": 5,
+    "type": "equip",
+    "description": "锁定技，其他角色计算与你的距离+1。",
+    "image": "的卢.jpg"
+  },
+  {
+    "card_id": "杀-club-6-61",
+    "name": "杀",
+    "suit": "club",
+    "rank": 6,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "乐不思蜀-club-6-62",
+    "name": "乐不思蜀",
+    "suit": "club",
+    "rank": 6,
+    "type": "delayed",
+    "description": "出牌阶段，对一名其他角色使用。判定阶段进行判定：若为红桃，则失效；否则跳过其出牌阶段。",
+    "image": "乐不思蜀.jpg"
+  },
+  {
+    "card_id": "杀-club-7-63",
+    "name": "杀",
+    "suit": "club",
+    "rank": 7,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "南蛮入侵-club-7-64",
+    "name": "南蛮入侵",
+    "suit": "club",
+    "rank": 7,
+    "type": "scroll",
+    "description": "出牌阶段，对所有其他角色使用。每名角色需打出一张【杀】，否则受到1点伤害。",
+    "image": "南蛮入侵.jpg"
+  },
+  {
+    "card_id": "杀-club-8-65",
+    "name": "杀",
+    "suit": "club",
+    "rank": 8,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "杀-club-8-66",
+    "name": "杀",
+    "suit": "club",
+    "rank": 8,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "杀-club-9-67",
+    "name": "杀",
+    "suit": "club",
+    "rank": 9,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "杀-club-9-68",
+    "name": "杀",
+    "suit": "club",
+    "rank": 9,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "杀-club-10-69",
+    "name": "杀",
+    "suit": "club",
+    "rank": 10,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "杀-club-10-70",
+    "name": "杀",
+    "suit": "club",
+    "rank": 10,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "杀-club-11-71",
+    "name": "杀",
+    "suit": "club",
+    "rank": 11,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "杀-club-11-72",
+    "name": "杀",
+    "suit": "club",
+    "rank": 11,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "借刀杀人-club-12-73",
+    "name": "借刀杀人",
+    "suit": "club",
+    "rank": 12,
+    "type": "scroll",
+    "description": "出牌阶段，对一名装备区里有武器牌的其他角色使用。其需对你指定的一名角色使用一张【杀】，否则将其装备区里的武器牌交给你。",
+    "image": "借刀杀人.jpg"
+  },
+  {
+    "card_id": "借刀杀人-club-12-74",
+    "name": "借刀杀人",
+    "suit": "club",
+    "rank": 12,
+    "type": "scroll",
+    "description": "出牌阶段，对一名装备区里有武器牌的其他角色使用。其需对你指定的一名角色使用一张【杀】，否则将其装备区里的武器牌交给你。",
+    "image": "借刀杀人.jpg"
+  },
+  {
+    "card_id": "无懈可击-club-12-75",
+    "name": "无懈可击",
+    "suit": "club",
+    "rank": 12,
+    "type": "scroll",
+    "description": "抵消一张锦囊牌的效果。",
+    "image": "无懈可击.jpg"
+  },
+  {
+    "card_id": "借刀杀人-club-13-76",
+    "name": "借刀杀人",
+    "suit": "club",
+    "rank": 13,
+    "type": "scroll",
+    "description": "出牌阶段，对一名装备区里有武器牌的其他角色使用。其需对你指定的一名角色使用一张【杀】，否则将其装备区里的武器牌交给你。",
+    "image": "借刀杀人.jpg"
+  },
+  {
+    "card_id": "无懈可击-club-13-77",
+    "name": "无懈可击",
+    "suit": "club",
+    "rank": 13,
+    "type": "scroll",
+    "description": "抵消一张锦囊牌的效果。",
+    "image": "无懈可击.jpg"
+  },
+  {
+    "card_id": "决斗-diamond-1-78",
+    "name": "决斗",
+    "suit": "diamond",
+    "rank": 1,
+    "type": "scroll",
+    "description": "出牌阶段，对一名其他角色使用。由其开始，其与你轮流打出一张【杀】，直到有一方不打。不打【杀】的一方受到1点伤害。",
+    "image": "决斗.jpg"
+  },
+  {
+    "card_id": "诸葛连弩-diamond-1-79",
+    "name": "诸葛连弩",
+    "suit": "diamond",
+    "rank": 1,
+    "type": "equip",
+    "description": "锁定技，你使用【杀】无次数限制。",
+    "image": "诸葛连弩.jpg"
+  },
+  {
+    "card_id": "闪-diamond-2-80",
+    "name": "闪",
+    "suit": "diamond",
+    "rank": 2,
+    "type": "basic",
+    "description": "抵消一张【杀】。",
+    "image": "闪.jpg"
+  },
+  {
+    "card_id": "闪-diamond-2-81",
+    "name": "闪",
+    "suit": "diamond",
+    "rank": 2,
+    "type": "basic",
+    "description": "抵消一张【杀】。",
+    "image": "闪.jpg"
+  },
+  {
+    "card_id": "闪-diamond-3-82",
+    "name": "闪",
+    "suit": "diamond",
+    "rank": 3,
+    "type": "basic",
+    "description": "抵消一张【杀】。",
+    "image": "闪.jpg"
+  },
+  {
+    "card_id": "顺手牵羊-diamond-3-83",
+    "name": "顺手牵羊",
+    "suit": "diamond",
+    "rank": 3,
+    "type": "scroll",
+    "description": "出牌阶段，对距离为1的一名区域里有牌的其他角色使用。你获得其区域里的一张牌。",
+    "image": "顺手牵羊.jpg"
+  },
+  {
+    "card_id": "闪-diamond-4-84",
+    "name": "闪",
+    "suit": "diamond",
+    "rank": 4,
+    "type": "basic",
+    "description": "抵消一张【杀】。",
+    "image": "闪.jpg"
+  },
+  {
+    "card_id": "顺手牵羊-diamond-4-85",
+    "name": "顺手牵羊",
+    "suit": "diamond",
+    "rank": 4,
+    "type": "scroll",
+    "description": "出牌阶段，对距离为1的一名区域里有牌的其他角色使用。你获得其区域里的一张牌。",
+    "image": "顺手牵羊.jpg"
+  },
+  {
+    "card_id": "闪-diamond-5-86",
+    "name": "闪",
+    "suit": "diamond",
+    "rank": 5,
+    "type": "basic",
+    "description": "抵消一张【杀】。",
+    "image": "闪.jpg"
+  },
+  {
+    "card_id": "贯石斧-diamond-5-87",
+    "name": "贯石斧",
+    "suit": "diamond",
+    "rank": 5,
+    "type": "equip",
+    "description": "你使用【杀】被【闪】抵消时，你可以弃置两张牌，令此【杀】依然造成伤害。",
+    "image": "贯石斧.jpg"
+  },
+  {
+    "card_id": "闪-diamond-6-88",
+    "name": "闪",
+    "suit": "diamond",
+    "rank": 6,
+    "type": "basic",
+    "description": "抵消一张【杀】。",
+    "image": "闪.jpg"
+  },
+  {
+    "card_id": "杀-diamond-6-89",
+    "name": "杀",
+    "suit": "diamond",
+    "rank": 6,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "闪-diamond-7-90",
+    "name": "闪",
+    "suit": "diamond",
+    "rank": 7,
+    "type": "basic",
+    "description": "抵消一张【杀】。",
+    "image": "闪.jpg"
+  },
+  {
+    "card_id": "杀-diamond-7-91",
+    "name": "杀",
+    "suit": "diamond",
+    "rank": 7,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "闪-diamond-8-92",
+    "name": "闪",
+    "suit": "diamond",
+    "rank": 8,
+    "type": "basic",
+    "description": "抵消一张【杀】。",
+    "image": "闪.jpg"
+  },
+  {
+    "card_id": "杀-diamond-8-93",
+    "name": "杀",
+    "suit": "diamond",
+    "rank": 8,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "闪-diamond-9-94",
+    "name": "闪",
+    "suit": "diamond",
+    "rank": 9,
+    "type": "basic",
+    "description": "抵消一张【杀】。",
+    "image": "闪.jpg"
+  },
+  {
+    "card_id": "杀-diamond-9-95",
+    "name": "杀",
+    "suit": "diamond",
+    "rank": 9,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "闪-diamond-10-96",
+    "name": "闪",
+    "suit": "diamond",
+    "rank": 10,
+    "type": "basic",
+    "description": "抵消一张【杀】。",
+    "image": "闪.jpg"
+  },
+  {
+    "card_id": "杀-diamond-10-97",
+    "name": "杀",
+    "suit": "diamond",
+    "rank": 10,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "闪-diamond-11-98",
+    "name": "闪",
+    "suit": "diamond",
+    "rank": 11,
+    "type": "basic",
+    "description": "抵消一张【杀】。",
+    "image": "闪.jpg"
+  },
+  {
+    "card_id": "闪-diamond-11-99",
+    "name": "闪",
+    "suit": "diamond",
+    "rank": 11,
+    "type": "basic",
+    "description": "抵消一张【杀】。",
+    "image": "闪.jpg"
+  },
+  {
+    "card_id": "桃-diamond-12-100",
+    "name": "桃",
+    "suit": "diamond",
+    "rank": 12,
+    "type": "basic",
+    "description": "出牌阶段，为你恢复1点体力；或有人处于濒死状态时，对其使用，恢复1点体力。",
+    "image": "桃.jpg"
+  },
+  {
+    "card_id": "方天画戟-diamond-12-101",
+    "name": "方天画戟",
+    "suit": "diamond",
+    "rank": 12,
+    "type": "equip",
+    "description": "你使用【杀】时，若你所有的手牌为这张【杀】，此【杀】目标可加二。",
+    "image": "方天画戟.jpg"
+  },
+  {
+    "card_id": "无懈可击-diamond-12-102",
+    "name": "无懈可击",
+    "suit": "diamond",
+    "rank": 12,
+    "type": "scroll",
+    "description": "抵消一张锦囊牌的效果。",
+    "image": "无懈可击.jpg"
+  },
+  {
+    "card_id": "杀-diamond-13-103",
+    "name": "杀",
+    "suit": "diamond",
+    "rank": 13,
+    "type": "basic",
+    "description": "出牌阶段，对你攻击范围内的一名角色使用。若其不出【闪】，则受到1点伤害。",
+    "image": "杀.jpg"
+  },
+  {
+    "card_id": "紫骍-diamond-13-104",
+    "name": "紫骍",
+    "suit": "diamond",
+    "rank": 13,
+    "type": "equip",
+    "description": "锁定技，你计算与其他角色的距离-1。",
+    "image": "紫骍.jpg"
+  }
+]
