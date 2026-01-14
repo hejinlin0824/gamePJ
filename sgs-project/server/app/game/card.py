@@ -1,27 +1,24 @@
 from enum import Enum
 from pydantic import BaseModel
+from typing import Optional
 
-class CardSuit(str, Enum):
-    SPADE = "spade"     # 黑桃 ♠
-    HEART = "heart"     # 红桃 ♥
-    CLUB = "club"       # 梅花 ♣
-    DIAMOND = "diamond" # 方片 ♦
-    NONE = "none"       # 无花色 (特殊牌)
-
+# === 1. 卡牌类型枚举 ===
 class CardType(str, Enum):
-    BASIC = "basic"         # 基本牌 (杀闪桃)
-    SCROLL = "scroll"       # 锦囊牌 (过河拆桥等)
-    EQUIP = "equip"         # 装备牌
-    DELAYED_SCROLL = "delayed" # 延时锦囊 (乐不思蜀)
+    BASIC = "basic"              # 基本牌 (杀、闪、桃、酒)
+    STRATEGY = "strategy"        # 锦囊牌 (无中生有、顺手牵羊、过河拆桥等)
+    EQUIP_WEAPON = "weapon"      # 装备：武器
+    EQUIP_ARMOR = "armor"        # 装备：防具
+    EQUIP_HORSE_PLUS = "horse_plus"   # 装备：+1马 (防御)
+    EQUIP_HORSE_MINUS = "horse_minus" # 装备：-1马 (进攻)
 
+# === 2. 卡牌数据模型 ===
 class Card(BaseModel):
-    card_id: str        # 唯一ID (例如 "sha-spade-7")
-    name: str           # 名称 (杀)
-    suit: CardSuit      # 花色
-    rank: int           # 点数 (1-13)
-    type: CardType      # 类型
-    image: str = ""     # 图片文件名 (预留)
-    description: str = "" # 描述
-
-    class Config:
-        use_enum_values = True
+    card_id: str                 # 唯一标识符 (例如: c1, c2...)
+    name: str                    # 名称 (例如: 杀, 麒麟弓, +1马)
+    suit: str                    # 花色 (heart, spade, club, diamond)
+    number: int                  # 点_数 (1-13)
+    card_type: CardType          # 类型
+    
+    # --- 扩展属性 ---
+    distance_limit: int = 0      # 某些锦囊的距离限制 (如顺手牵羊为1，其余为0表示无限制)
+    attack_range: int = 1        # 🌟 武器的攻击范围。默认为1，高级武器(如麒麟弓)会设置更高

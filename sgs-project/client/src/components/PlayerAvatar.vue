@@ -1,118 +1,167 @@
 <script setup>
-// 接收父组件传来的属性
-defineProps({
-  player: Object,      // 玩家数据对象
+// 接收父组件传来的状态
+const props = defineProps({
+  player: Object,      // 包含 sid, seat_id, hp, card_count, equips 等
   isCurrent: Boolean,  // 是否是当前回合
-  isSelected: Boolean, // 是否被选中（作为攻击目标）
-  isMe: Boolean        // 是否是自己
+  isSelected: Boolean, // 是否被我选中为目标
+  isMe: Boolean        // 是否是玩家自己
 });
+
+// 装备槽位名称映射
+const slotLabels = {
+  weapon: "武",
+  armor: "防",
+  horse_plus: "让",
+  horse_minus: "追"
+};
 </script>
 
 <template>
-  <div 
-    class="avatar" 
-    :class="{ 
-      'current-turn': isCurrent, 
-      'selected': isSelected, 
-      'is-me': isMe 
-    }"
-  >
-    <div class="role-img">
-      {{ player.seat_id }}号
+  <div class="player-avatar-wrapper">
+    <div 
+      class="avatar-card" 
+      :class="{ 
+        'turn-active': isCurrent, 
+        'target-selected': isSelected,
+        'me-border': isMe 
+      }"
+    >
+      <div class="seat-index">{{ player.seat_id }}号</div>
+      <div class="role-name">{{ isMe ? '我' : '对手' }}</div>
+      
+      <div class="stats-panel">
+        <div class="stat-item hp">❤️ {{ player.hp }}</div>
+        <div class="stat-item hand">🎴 {{ player.card_count }}</div>
+      </div>
     </div>
-    
-    <div class="info">
-      <div class="hp-bar">❤️ {{ player.hp }}</div>
-      <div class="cards-icon">🎴 {{ player.card_count }}</div>
+
+    <div class="equip-sidebar">
+      <div 
+        v-for="(name, slot) in player.equips" 
+        :key="slot" 
+        class="equip-slot" 
+        :class="{ 'has-item': name }"
+        :title="name || '空'"
+      >
+        <span class="slot-type">{{ slotLabels[slot] }}</span>
+        <span class="equip-name">{{ name || '' }}</span>
+      </div>
     </div>
-    
-    <div v-if="isSelected" class="target-mark">🎯 目标</div>
-    
-    <div v-if="isMe" class="me-mark">我</div>
   </div>
 </template>
 
 <style scoped>
-.avatar {
-  width: 80px;
-  height: 100px;
-  background: #34495e; /* 深蓝灰色背景 */
-  border: 2px solid #555;
-  border-radius: 8px;
+.player-avatar-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  position: relative;
+}
+
+/* 头像卡片样式 */
+.avatar-card {
+  width: 75px;
+  height: 95px;
+  background: #2c3e50;
+  border: 2px solid #444;
+  border-radius: 6px;
+  position: relative;
   display: flex;
   flex-direction: column;
-  position: relative;
-  cursor: pointer;
   transition: all 0.2s;
-  user-select: none;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
-.avatar:hover { 
-  border-color: #aaa; 
-  transform: translateY(-2px);
-}
+.avatar-card:hover { border-color: #999; }
 
-/* 当前回合玩家：绿色呼吸灯效果 */
-.current-turn { 
-  border-color: #2ecc71; 
-  box-shadow: 0 0 15px rgba(46, 204, 113, 0.5); 
+/* 状态高亮 */
+.turn-active {
+  border-color: #2ecc71 !important;
+  box-shadow: 0 0 15px rgba(46, 204, 113, 0.6) !important;
 }
-
-/* 被选中为目标：红色高亮 */
-.selected { 
-  border-color: #e74c3c; 
-  background: #522; 
-  transform: scale(1.1); 
-  z-index: 10;
+.target-selected {
+  border-color: #e74c3c !important;
+  transform: scale(1.05);
+  background: #411 !important;
 }
+.me-border { border-color: #3498db; }
 
-/* 自己：蓝色边框 */
-.is-me {
-  border-color: #3498db;
-}
-
-.role-img { 
-  flex: 1; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  font-size: 1.5em; 
-  font-weight: bold; 
-  color: #fff; 
-}
-
-.info { 
-  background: rgba(0,0,0,0.6); 
-  padding: 4px; 
-  font-size: 0.8em; 
-  color: white;
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
-  display: flex;
-  justify-content: space-between;
-}
-
-.target-mark {
-  position: absolute; 
-  top: -10px; 
-  right: -10px;
-  background: #c0392b; 
-  color: white; 
-  padding: 2px 6px; 
-  border-radius: 4px; 
-  font-size: 0.7em;
-  font-weight: bold;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-}
-
-.me-mark {
+.seat-index {
   position: absolute;
-  top: -10px;
-  left: -10px;
-  background: #2980b9;
-  color: white;
-  padding: 2px 6px;
+  top: -8px;
+  left: -8px;
+  background: #333;
+  color: #fff;
+  font-size: 10px;
+  padding: 2px 5px;
   border-radius: 4px;
-  font-size: 0.7em;
+  border: 1px solid #666;
+}
+
+.role-name {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #ecf0f1;
+  font-size: 1.2em;
+}
+
+.stats-panel {
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: space-around;
+  padding: 2px 0;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.stat-item { font-size: 11px; color: #fff; }
+
+/* === 装备栏样式 === */
+.equip-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.equip-slot {
+  width: 42px;
+  height: 21px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.equip-slot.has-item {
+  border-color: #f1c40f;
+  background: #2c2500;
+}
+
+.slot-type {
+  font-size: 9px;
+  color: #777;
+  background: #000;
+  width: 14px;
+  text-align: center;
+  height: 100%;
+  line-height: 20px;
+}
+
+.has-item .slot-type { color: #f1c40f; }
+
+.equip-name {
+  font-size: 9px;
+  color: #f1c40f;
+  padding-left: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
 }
 </style>
