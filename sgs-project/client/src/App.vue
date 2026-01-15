@@ -1,8 +1,23 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { socket } from './services/socket';
+import { useUserStore } from './stores/userStore'; // 引入用户状态
 import GameCard from './components/GameCard.vue';
 import PlayerAvatar from './components/PlayerAvatar.vue';
+import Login from './components/Login.vue'; // 引入登录组件
+
+// === 0. 用户系统集成 ===
+const userStore = useUserStore();
+
+// 监听登录状态：一旦登录成功，带着 Token 连接 Socket
+watch(() => userStore.isLoggedIn, (newVal) => {
+  if (newVal && userStore.token) {
+    socket.auth = { token: userStore.token }; // 注入 Token
+    socket.connect();
+  } else {
+    socket.disconnect(); // 登出断开
+  }
+});
 
 // === 1. 数据基础状态 ===
 const inRoom = ref(false);        
@@ -16,7 +31,7 @@ const gameState = ref({
   room_id: '', 
   is_started: false, 
   deck_count: 0,
-  pending: null,    // 核心：存储服务器下发的询问动作 { source_sid, target_sid, action_type, extra_data }
+  pending: null,    // 核心：存储服务器下发的询问动作
   winner_sid: null  // 核心：存储胜利者ID
 });
 const systemMsg = ref("");        
@@ -47,7 +62,18 @@ const isMyResponse = computed(() => {
 
 // === 4. 生命周期与 Socket 监听 ===
 onMounted(() => {
-  socket.connect();
+  // 修改：只有已登录才连接，否则等待登录成功
+  if (userStore.isLoggedIn && userStore.token) {
+    socket.auth = { token: userStore.token };
+    socket.connect();
+  }
+
+  socket.on('connect_error', (err) => {
+    if (err.message === "身份验证失败") {
+        showToast("⚠️ 登录已过期，请重新登录");
+        userStore.logout();
+    }
+  });
 
   socket.on('hand_update', (data) => { 
     handCards.value = data.cards; 
@@ -182,7 +208,20 @@ const hasShan = computed(() => handCards.value.some(c => c.name === '闪'));
       </div>
     </transition>
 
-    <div v-if="!inRoom" class="lobby-view">
+    <Login v-if="!userStore.isLoggedIn" />
+
+    <div v-else-if="!inRoom" class="lobby-view">
+      <div class="user-profile-bar">
+        <div class="profile-left">
+          <img :src="`/avatars/${userStore.user?.avatar || 'default.png'}`" class="user-avatar-small" />
+          <div class="user-details">
+            <div class="user-nickname">{{ userStore.user?.nickname || '未知武将' }}</div>
+            <div class="user-account">@{{ userStore.user?.username }}</div>
+          </div>
+        </div>
+        <button class="btn-logout" @click="userStore.logout()">注销</button>
+      </div>
+
       <div class="lobby-card">
         <h1 class="logo">🏯 三国杀 · 硬核交互版</h1>
         <div class="join-form">
@@ -326,7 +365,23 @@ html, body {
 .btn-restart { margin-top: 30px; padding: 12px 40px; background: #f1c40f; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; color: #000; }
 
 /* 大厅 */
-.lobby-view { flex: 1; display: flex; justify-content: center; align-items: center; background: radial-gradient(circle, #2c3e50, #000); }
+.lobby-view { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: radial-gradient(circle, #2c3e50, #000); position: relative; }
+
+/* === 用户信息栏 (新增) === */
+.user-profile-bar {
+  position: absolute; top: 20px; right: 20px;
+  display: flex; align-items: center; gap: 15px;
+  background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 50px;
+  border: 1px solid rgba(255,255,255,0.2);
+  backdrop-filter: blur(5px);
+}
+.user-avatar-small { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #d4af37; object-fit: cover; }
+.user-details { display: flex; flex-direction: column; align-items: flex-start; }
+.user-nickname { font-weight: bold; color: #f1c40f; font-size: 14px; }
+.user-account { color: #aaa; font-size: 12px; }
+.btn-logout { background: transparent; border: 1px solid #c0392b; color: #c0392b; padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+.btn-logout:hover { background: #c0392b; color: #fff; }
+
 .lobby-card { background: rgba(255, 255, 255, 0.05); padding: 50px; border-radius: 20px; border: 1px solid #333; text-align: center; }
 .logo { margin-bottom: 30px; letter-spacing: 4px; }
 .join-form { display: flex; gap: 10px; }

@@ -36,6 +36,12 @@ class PlayerState(BaseModel):
     """玩家全量状态模型"""
     sid: str
     seat_id: int
+    
+    # === 🌟 新增：用户身份信息 ===
+    username: str = ""          # 账号
+    nickname: str = "无名氏"     # 昵称
+    avatar: str = "default.png" # 头像
+    
     hp: int = 4
     max_hp: int = 4
     hand_cards: List[Card] = []
@@ -67,14 +73,29 @@ class GameRoom:
             if p.sid == sid: return p
         return None
 
-    def add_player(self, sid: str) -> Tuple[bool, str]:
+    # 🌟 修改：接收 user_info 参数
+    def add_player(self, sid: str, user_info: dict = None) -> Tuple[bool, str]:
         if self.is_started: return False, "游戏已开始"
         if len(self.players) >= 8: return False, "房间已满"
         if self.get_player(sid): return True, "已在房间内"
 
         is_first = len(self.players) == 0
+        
+        # 🌟 处理用户信息
+        u_info = user_info or {}
+        username = u_info.get("username", "")
+        # 如果没有昵称，根据座位号生成默认名
+        nickname = u_info.get("nickname", f"群雄{len(self.players) + 1}")
+        avatar = u_info.get("avatar", "default.png")
+
         new_player = PlayerState(
-            sid=sid, seat_id=len(self.players), is_host=is_first, is_ready=is_first
+            sid=sid, 
+            seat_id=len(self.players) + 1, # 修改为 1-based 索引，或者保持你原来的逻辑
+            is_host=is_first, 
+            is_ready=is_first,
+            username=username,
+            nickname=nickname,
+            avatar=avatar
         )
         self.players.append(new_player)
         return True, "加入成功"
@@ -86,7 +107,8 @@ class GameRoom:
         self.players = [pl for pl in self.players if pl.sid != sid]
         if was_host and self.players:
             self.players[0].is_host, self.players[0].is_ready = True, True
-        for i, pl in enumerate(self.players): pl.seat_id = i
+        # 重置座位号
+        for i, pl in enumerate(self.players): pl.seat_id = i + 1
 
     def kick_player(self, host_sid: str, target_sid: str) -> Tuple[bool, str]:
         host = self.get_player(host_sid)
@@ -108,6 +130,8 @@ class GameRoom:
         if not p1 or not p2: return 999
         
         n = len(self.players)
+        if n == 0: return 0
+        # 简单处理座位差值（假设 seat_id 是有序的）
         diff = abs(p1.seat_id - p2.seat_id)
         phys_dist = min(diff, n - diff)
         
@@ -189,8 +213,7 @@ class GameRoom:
         
         card = p.hand_cards[index]
 
-        # 🌟 核心：通用装备逻辑（修复了你的武器逻辑消失问题）
-        # 只要卡牌类型属于四大类装备，就执行替换逻辑
+        # 装备逻辑
         is_weapon = card.card_type == CardType.EQUIP_WEAPON
         is_armor = card.card_type == CardType.EQUIP_ARMOR
         is_horse_plus = card.card_type == CardType.EQUIP_HORSE_PLUS
@@ -200,11 +223,9 @@ class GameRoom:
             slot = "weapon" if is_weapon else "armor" if is_armor else \
                    "horse_plus" if is_horse_plus else "horse_minus"
             
-            # 将旧装备放入弃牌堆
             old_item = p.equip_area[slot]
             if old_item: self.deck.discard_pile.append(old_item)
             
-            # 穿上新装备（此时 Card 对象的 attack_range 等属性已在对象中）
             p.equip_area[slot] = p.hand_cards.pop(index)
             return True, f"成功装配了 {card.name}", card
 
@@ -285,7 +306,7 @@ class GameRoom:
             self.pending_action = None
             return True, "未响应【闪】，受到了1点伤害"
 
-        # 2. 响应【拆桥】(丢牌入弃牌堆)
+        # 2. 响应【拆桥】
         if act.action_type == PendingType.ASK_FOR_DISMANTLE:
             target_p = self.get_player(act.extra_data["target_to_dismantle"])
             if not target_p: return False, "目标已离线"
@@ -293,11 +314,10 @@ class GameRoom:
             self.pending_action = None
             return True, "已成功拆除对方的牌"
 
-        # 3. 响应【顺手】(牌归自己手牌)
+        # 3. 响应【顺手】
         if act.action_type == PendingType.ASK_FOR_SNATCH:
             target_p = self.get_player(act.extra_data["target_to_snatch"])
             if not target_p: return False, "目标已离线"
-            # 🌟 to_hand=True 居为己用
             self._move_card(target_p, p_self, target_area, to_hand=True)
             self.pending_action = None
             return True, "顺手牵羊成功，牌已归入你的手牌"
@@ -309,7 +329,9 @@ class GameRoom:
         card = None
         # 移出手牌
         if area == "hand" and from_p.hand_cards:
-            card = from_p.hand_cards.pop(0) 
+            import random
+            idx = random.randint(0, len(from_p.hand_cards)-1)
+            card = from_p.hand_cards.pop(idx) 
         # 移出装备
         elif area in from_p.equip_area:
             card = from_p.equip_area[area]
@@ -343,13 +365,17 @@ class GameRoom:
     def get_public_state(self):
         """全量状态导出"""
         return {
-            "room_id": self.room_id, "phase": self.phase, "current_seat": self.current_player_idx,
+            "room_id": self.room_id, "phase": self.phase, "current_seat": self.players[self.current_player_idx].seat_id if self.players else 0,
             "is_started": self.is_started, "deck_count": len(self.deck.draw_pile),
             "pending": self.pending_action.model_dump() if self.pending_action else None,
             "winner_sid": self.winner_sid,
             "players": [
                 {
                     "sid": p.sid, "seat_id": p.seat_id, "hp": p.hp, "max_hp": p.max_hp,
+                    # 🌟 核心：返回昵称和头像
+                    "username": p.username,
+                    "nickname": p.nickname,
+                    "avatar": p.avatar,
                     "is_alive": p.is_alive, "is_ready": p.is_ready, "is_host": p.is_host,
                     "card_count": len(p.hand_cards),
                     "equips": {k: (v.name if v else None) for k, v in p.equip_area.items()}

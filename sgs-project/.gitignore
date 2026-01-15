@@ -1,1 +1,38 @@
+# 忽略node_modules目录（包括所有子目录和文件）
 node_modules/
+
+# 可选：补充前端项目常见的忽略项（推荐添加，避免冗余）
+# Vue/Vite项目常见忽略
+dist/
+dist-ssr/
+*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python项目常见忽略（你的项目有Python代码，补充）
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
