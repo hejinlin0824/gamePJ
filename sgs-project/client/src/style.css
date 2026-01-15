@@ -1,4 +1,5 @@
 :root {
+  /* 基础字体回退 */
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -11,6 +12,21 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* === 🌟 新增：三国杀古风色板 === */
+  --sgs-wood-dark: #3e2723;   /* 深木色：用于边框、底座 */
+  --sgs-wood-light: #5d4037;  /* 浅木色：用于按钮 */
+  --sgs-gold: #ffb300;        /* 帝王金：用于高亮、房主 */
+  --sgs-red: #c62828;         /* 杀气红：用于攻击、扣血 */
+  --sgs-paper: #fdfbf7;       /* 宣纸白：用于卡牌背景 */
+  --sgs-ink: #212121;         /* 墨色：用于文字 */
+}
+
+/* === 🌟 新增：古风字体定义 === */
+@font-face {
+  font-family: 'SgsFont';
+  /* 优先尝试隶书、行楷、楷体，最后回退到宋体 */
+  src: local('LiSu'), local('STKaiti'), local('KaiTi'), local('SimSun'), serif;
 }
 
 body {
@@ -19,15 +35,23 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
-  background: #1a1a1a; /* 深灰背景 */
+  
+  /* 🌟 修改：深色战场纹理背景 */
+  background-color: #1a1a1a;
+  background-image: radial-gradient(circle at 50% 50%, #2c1e15 0%, #000000 100%);
+  
+  /* 🌟 修改：全局应用古风字体 */
+  font-family: 'SgsFont', "PingFang SC", serif;
+  overflow: hidden; /* 禁止页面滚动，营造应用感 */
 }
 
 #app {
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0; /* 去除默认内边距 */
   text-align: center;
+  height: 100vh; /* 撑满屏幕高度 */
 }
 
 button {
@@ -36,15 +60,34 @@ button {
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
-  font-family: inherit;
+  font-family: 'SgsFont', inherit; /* 按钮文字也用古风 */
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
 button:hover {
   border-color: #646cff;
 }
+
 button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+/* === 🌟 新增：滚动条美化 (Webkit) === */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--sgs-wood-light);
+  border-radius: 4px;
+  border: 1px solid var(--sgs-wood-dark);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--sgs-gold);
 }

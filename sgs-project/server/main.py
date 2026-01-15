@@ -8,7 +8,7 @@ from sqlmodel import Session, select
 from app.core.database import create_db_and_tables, engine 
 from app.api.auth import router as auth_router
 from app.core.security import decode_access_token
-from app.models.user import User      
+from app.models.user import User       
 
 from app.game.manager import room_manager
 from app.game.room import GamePhase
@@ -38,7 +38,7 @@ socket_app = socketio.ASGIApp(sio, app)
 
 @app.get("/")
 async def root():
-    return {"status": "ok", "version": "SGS Hardcore Engine v5.4 (Zombie Room Fix)"}
+    return {"status": "ok", "version": "SGS Hardcore Engine v5.6 (Leave Button Fix)"}
 
 # === 2. 状态同步与系统通知工具 ===
 
@@ -93,40 +93,32 @@ async def connect(sid, environ, auth=None):
                     }
                     print(f"🔐 用户已认证: {user.nickname} (@{user.username})")
     
-    # 🌟 修复：强制认证，拒绝游客 (防止同号多开导致逻辑混乱)
     if not user_info["username"]:
         print(f"⛔ 拒绝匿名/无效连接: {sid}")
-        return False # 拒绝连接
+        return False 
 
     await sio.save_session(sid, user_info)
-    
-    # 连接成功，广播大厅 (虽然此时用户还没进任何房间，但大厅人数可能需要统计)
     await broadcast_lobby()
 
 @sio.event
 async def disconnect(sid):
+    """处理意外断开连接（刷新页面、关闭浏览器）"""
     room = room_manager.get_player_room(sid)
     if room:
-        # 情况 A: 游戏正在进行
         if room.is_started:
-            # 执行中途逃跑逻辑 (判负、转移房主、强制结束回合)
             msg = room.handle_disconnect_during_game(sid)
             await notify_room(room.room_id, msg)
             await sio.leave_room(sid, room.room_id)
             
-            # 🌟 核心修复：清理僵尸房间
-            # 如果房间里已经没有活人了 (alive_count == 0)，直接销毁房间
-            # 这样大厅就不会一直显示“激战中”了
-            alive_count = len([p for p in room.players if p.is_alive])
+            alive_players = [p for p in room.players if p.is_alive]
             
-            if alive_count == 0:
-                print(f"🏚️ 房间 {room.room_id} 全员阵亡/逃跑，强制销毁")
+            if len(alive_players) == 0:
+                print(f"💀 房间 {room.room_id} 无人生还，强制销毁")
                 room_manager.remove_room(room.room_id)
-            else:
-                # 还有活人，广播更新后的状态
+            elif room.phase == GamePhase.GAME_OVER:
                 await broadcast_room_state(room)
-        
-        # 情况 B: 游戏在大厅/已结束
+            else:
+                await broadcast_room_state(room)
         else:
             room.remove_player(sid)
             await sio.leave_room(sid, room.room_id)
@@ -138,7 +130,6 @@ async def disconnect(sid):
                 await notify_room(room.room_id, "一名玩家离开了战场")
                 await broadcast_room_state(room)
     
-    # 🌟 无论何种情况，有人断开都会影响大厅显示，广播大厅
     await broadcast_lobby()
 
 @sio.event
@@ -158,7 +149,6 @@ async def join_room(sid, data):
     await notify_room(room_id, f"玩家 [{nickname}] 进入了房间")
     
     await broadcast_room_state(room)
-    # 🌟 房间人数+1，广播大厅
     await broadcast_lobby()
 
 @sio.event
@@ -166,24 +156,47 @@ async def leave_room(sid, data):
     """前端主动点击“离开”按钮"""
     room = room_manager.get_player_room(sid)
     if room:
+        # === 场景 A：游戏未开始（大厅等待中） ===
         if not room.is_started:
             room.remove_player(sid)
             await sio.leave_room(sid, room.room_id)
+            
             if not room.players:
+                print(f"🏠 房间 {room.room_id} 人去楼空，销毁")
                 room_manager.remove_room(room.room_id)
             else:
                 await broadcast_room_state(room)
             
-            # 🌟 房间人数-1，广播大厅
             await broadcast_lobby()
+            
+        # === 场景 B：游戏进行中（中途逃跑） ===
         else:
-            # 游戏中点离开，理论上应该走 disconnect 流程
-            # 前端通常在调用这个之前会 resetToLobby，或者 socket 断开
-            pass
+            # 🌟 核心改进：这里不再是 pass，而是执行完整的逃跑/死亡结算逻辑
+            print(f"👋 玩家 {sid} 主动点击离开按钮")
+            
+            # 1. 逻辑判负与遗产分配
+            msg = room.handle_disconnect_during_game(sid)
+            await notify_room(room.room_id, msg)
+            await sio.leave_room(sid, room.room_id)
+            
+            # 2. 检查是否需要销毁房间
+            alive_players = [p for p in room.players if p.is_alive]
+            
+            if len(alive_players) == 0:
+                print(f"💀 房间 {room.room_id} 无人生还，强制销毁")
+                room_manager.remove_room(room.room_id)
+            elif room.phase == GamePhase.GAME_OVER:
+                # 游戏结束，广播最后状态
+                await broadcast_room_state(room)
+            else:
+                # 游戏继续，广播新状态（移交回合后）
+                await broadcast_room_state(room)
+            
+            # 3. 立即刷新大厅列表（解决你遇到的“必须刷新页面才释放房间”的问题）
+            await broadcast_lobby()
 
 @sio.event
 async def get_lobby(sid, data):
-    """前端主动拉取大厅数据"""
     lobby_data = room_manager.get_lobby_info()
     await sio.emit('lobby_update', lobby_data, room=sid)
 
@@ -204,7 +217,6 @@ async def kick_player(sid, data):
             await sio.emit('kicked', {}, room=target_sid)
             await sio.leave_room(target_sid, room.room_id)
             await broadcast_room_state(room)
-            # 🌟 房间人数-1，广播大厅
             await broadcast_lobby()
         else:
             await notify_error(sid, msg)
@@ -217,7 +229,6 @@ async def start_game(sid, data):
     if success:
         await notify_room(room.room_id, msg)
         await broadcast_room_state(room)
-        # 🌟 房间状态变为 Playing，广播大厅
         await broadcast_lobby()
     else:
         await notify_error(sid, msg)
@@ -233,10 +244,10 @@ async def select_general(sid, data):
     if success:
         await broadcast_room_state(room)
         if "游戏开始" in msg:
-             await sio.emit('game_started', {}, room=room.room_id)
-             await notify_room(room.room_id, "⚔️ 众将归位，乱世开启！")
+            await sio.emit('game_started', {}, room=room.room_id)
+            await notify_room(room.room_id, "⚔️ 众将归位，乱世开启！")
         else:
-             await sio.emit('system_message', {'msg': "✅ 武将选择已确认，等待他人..."}, room=sid)
+            await sio.emit('system_message', {'msg': "✅ 武将选择已确认，等待他人..."}, room=sid)
     else:
         await notify_error(sid, msg)
 

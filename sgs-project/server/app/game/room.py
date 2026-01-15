@@ -16,11 +16,11 @@ from .skills.general import GENERAL_SKILL_REGISTRY
 
 class PendingAction(BaseModel):
     """当前正在等待的交互详情"""
-    source_sid: str                       
-    target_sid: str                       
-    card_id: Optional[str] = None            
-    action_type: PendingType                 
-    extra_data: Dict[str, Any] = {}          
+    source_sid: str                         
+    target_sid: str                         
+    card_id: Optional[str] = None           
+    action_type: PendingType                  
+    extra_data: Dict[str, Any] = {}           
 
 # === 房间逻辑引擎核心 ===
 
@@ -57,7 +57,7 @@ class GameRoom:
         if len(self.players) >= 8: return False, "房间已满"
         if self.get_player(sid): return True, "已在房间内"
 
-        # 🌟 修复：禁止同一账号重复加入
+        # 禁止同一账号重复加入
         new_username = user_info.get("username", "")
         if new_username:
             for p in self.players:
@@ -82,7 +82,7 @@ class GameRoom:
         p = self.get_player(sid)
         if not p: return
         
-        # 🌟 游戏进行中离开 -> 走逃跑逻辑
+        # 游戏进行中离开 -> 走逃跑逻辑
         if self.is_started and p.is_alive:
             self.handle_disconnect_during_game(sid)
             return
@@ -108,7 +108,7 @@ class GameRoom:
         if p and not p.is_host: p.is_ready = not p.is_ready
         return True
 
-    # --- 🌟 游戏中途退出与死亡逻辑 (Fix Deadlock) ---
+    # --- 🌟 游戏中途退出与死亡逻辑 (修复版) ---
 
     def handle_disconnect_during_game(self, sid: str) -> str:
         p = self.get_player(sid)
@@ -121,6 +121,7 @@ class GameRoom:
         count = len(self.players)
         
         # 1. 寻找上家 (逆时针寻找第一个存活者)
+        # 如果没有上家（比如所有人都没动过），receiver 保持 None，kill_player 会自动将牌弃置
         for i in range(1, count):
             check_idx = (my_idx - i + count) % count
             candidate = self.players[check_idx]
@@ -130,15 +131,18 @@ class GameRoom:
         
         # 2. 死亡结算
         self.kill_player(p, receiver)
+        
         msg = f"{p.nickname} 临阵脱逃，全军覆没！"
         if receiver:
             msg += f" 其辎重被上家 {receiver.nickname} 接收。"
         else:
             msg += " 辎重尽数弃置。"
 
-        # 3. 胜负检测优先
+        # 🌟 修复 Bug 1：关键拦截
+        # 如果 kill_player 导致游戏结束（phase 变为 GAME_OVER），
+        # 必须立即返回，绝对不能再执行后面的“移交回合”逻辑，否则会将状态改回 PLAY
         if self.phase == GamePhase.GAME_OVER:
-            print("🏆 逃跑导致游戏结束")
+            print("🏆 逃跑导致游戏结束，停止回合流转")
             return msg
 
         # 🌟 4. 状态清理与回合强制结束
@@ -146,7 +150,7 @@ class GameRoom:
         # A. 如果有人正在对他进行操作 (Pending Target 是逃跑者) -> 强制取消
         if self.pending_action and self.pending_action.target_sid == sid:
             print("⚠️ 逃跑者有待响应操作，自动取消")
-            self.handle_response(sid, None, None) 
+            self.pending_action = None 
 
         # B. 如果当前是逃跑者的回合 -> 强制跳过到下一个人
         current_p = self.players[self.current_player_idx]
@@ -162,6 +166,7 @@ class GameRoom:
                 next_p = self.players[next_idx]
                 if next_p.is_alive:
                     self.current_player_idx = next_idx
+                    # 只有游戏没结束时才开启新回合
                     self._enter_turn_cycle(next_p)
                     found_next = True
                     break
@@ -193,7 +198,6 @@ class GameRoom:
         else:
             print(f"💀 {victim.nickname} 阵亡，遗产弃置")
             self.deck.discard_pile.extend(victim.hand_cards)
-            # 🌟 修复：使用 equips
             for k, card in victim.equips.items():
                 if card: self.deck.discard_pile.append(card)
         
@@ -204,7 +208,6 @@ class GameRoom:
 
     def _transfer_cards(self, source: Player, target: Player):
         target.hand_cards.extend(source.hand_cards)
-        # 🌟 修复：使用 equips
         for k, card in source.equips.items():
             if card:
                 target.hand_cards.append(card)
@@ -312,7 +315,7 @@ class GameRoom:
     def _enter_turn_cycle(self, player: Player):
         self.phase = GamePhase.DRAW
         
-        # 🌟 修复：回合开始重置出杀计数
+        # 回合开始重置出杀计数
         player.sha_count = 0
         
         draw_count = 2
@@ -334,7 +337,7 @@ class GameRoom:
             c = p.hand_cards.pop()
             self.deck.discard_pile.append(c)
         
-        # 🌟 循环查找下一个存活者
+        # 循环查找下一个存活者
         start_idx = self.current_player_idx
         while True:
             self.current_player_idx = (self.current_player_idx + 1) % len(self.players)
@@ -369,19 +372,19 @@ class GameRoom:
         
         card = p.hand_cards[index]
 
-        # 🌟 意图推断修复
+        # 意图推断
         real_skill_name = card.name
         can_transform = False
         
         # 1. 意图：出杀 (非杀牌 -> 杀)
         if target_sid and card.name != "杀" and card.name != "决斗" and card.name != "南蛮入侵" and card.name != "万箭齐发":
-             for s_name in p.skills:
-                 skill = GENERAL_SKILL_REGISTRY.get(s_name)
-                 if skill and skill.can_transform_card(p, card, "杀"):
-                     real_skill_name = "杀"
-                     can_transform = True
-                     print(f"⚔️ {p.nickname} 触发【{skill.name}】：{card.name} -> 杀")
-                     break
+            for s_name in p.skills:
+                skill = GENERAL_SKILL_REGISTRY.get(s_name)
+                if skill and skill.can_transform_card(p, card, "杀"):
+                    real_skill_name = "杀"
+                    can_transform = True
+                    print(f"⚔️ {p.nickname} 触发【{skill.name}】：{card.name} -> 杀")
+                    break
         
         # 2. 询问：技能确认
         if card.name == "杀" and target_sid:
@@ -399,7 +402,7 @@ class GameRoom:
                     return True, "请确认卡牌用途", None
         
         if target_sid and (card.name == "杀" or card.card_type.name.startswith("EQUIP")):
-             for s_name in p.skills:
+            for s_name in p.skills:
                 skill = GENERAL_SKILL_REGISTRY.get(s_name)
                 if skill and s_name == "guose" and skill.can_transform_card(p, card, "乐不思蜀"):
                     self.pending_action = PendingAction(
@@ -414,20 +417,20 @@ class GameRoom:
 
         # 3. 意图：默认转化
         if target_sid and card.name != "过河拆桥" and card.name != "杀" and not can_transform:
-             for s_name in p.skills:
-                 skill = GENERAL_SKILL_REGISTRY.get(s_name)
-                 if skill and skill.can_transform_card(p, card, "过河拆桥"):
-                     real_skill_name = "过河拆桥"
-                     can_transform = True
-                     break
-                     
+            for s_name in p.skills:
+                skill = GENERAL_SKILL_REGISTRY.get(s_name)
+                if skill and skill.can_transform_card(p, card, "过河拆桥"):
+                    real_skill_name = "过河拆桥"
+                    can_transform = True
+                    break
+                    
         if target_sid and card.name != "乐不思蜀" and card.name != "杀" and not can_transform:
-             for s_name in p.skills:
-                 skill = GENERAL_SKILL_REGISTRY.get(s_name)
-                 if skill and skill.can_transform_card(p, card, "乐不思蜀"):
-                     real_skill_name = "乐不思蜀"
-                     can_transform = True
-                     break
+            for s_name in p.skills:
+                skill = GENERAL_SKILL_REGISTRY.get(s_name)
+                if skill and skill.can_transform_card(p, card, "乐不思蜀"):
+                    real_skill_name = "乐不思蜀"
+                    can_transform = True
+                    break
 
         skill_strategy = None
         if card.card_type.name.startswith("EQUIP"):
