@@ -2,13 +2,13 @@ import socketio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from sqlmodel import Session, select  # <--- 新增
+from sqlmodel import Session, select 
 
 # === 引用 ===
-from app.core.database import create_db_and_tables, engine # <--- 新增 engine 引用
+from app.core.database import create_db_and_tables, engine 
 from app.api.auth import router as auth_router
 from app.core.security import decode_access_token
-from app.models.user import User      # <--- 新增 User 模型引用
+from app.models.user import User      
 
 from app.game.manager import room_manager
 from app.game.room import GamePhase
@@ -38,13 +38,15 @@ socket_app = socketio.ASGIApp(sio, app)
 
 @app.get("/")
 async def root():
-    return {"status": "ok", "version": "SGS Hardcore Engine v4.2 (Nickname Fix)"}
+    return {"status": "ok", "version": "SGS Hardcore Engine v5.4 (Zombie Room Fix)"}
 
 # === 2. 状态同步与系统通知工具 ===
 
 async def broadcast_room_state(room):
+    """向房间内所有玩家广播最新的游戏状态"""
     state = room.get_public_state()
     
+    # 检查是否刚触发游戏结束
     if state["phase"] == GamePhase.GAME_OVER and room.winner_sid:
         winner = room.get_player(room.winner_sid)
         if winner:
@@ -53,6 +55,7 @@ async def broadcast_room_state(room):
 
     await sio.emit('room_update', state, room=room.room_id)
     
+    # 私有手牌数据单独发送
     for p in room.players:
         if p.is_alive:
             cards_data = [c.model_dump() for c in p.hand_cards]
@@ -64,20 +67,21 @@ async def notify_error(sid, msg):
 async def notify_room(room_id, msg):
     await sio.emit('system_message', {'msg': msg}, room=room_id)
 
+async def broadcast_lobby():
+    """向所有连接的客户端广播最新的大厅列表状态"""
+    lobby_data = room_manager.get_lobby_info()
+    await sio.emit('lobby_update', lobby_data)
+
 # === 3. 基础房间管理事件 ===
 
 @sio.event
 async def connect(sid, environ, auth=None):
-    """
-    连接时查询数据库，获取完整用户信息并存入 Session
-    """
     user_info = {"nickname": "无名氏", "avatar": "default.png", "username": ""}
     
     if auth and "token" in auth:
         token = auth["token"]
         username = decode_access_token(token)
         if username:
-            # 🌟 关键修改：去数据库查完整信息
             with Session(engine) as db:
                 statement = select(User).where(User.username == username)
                 user = db.exec(statement).first()
@@ -88,50 +92,100 @@ async def connect(sid, environ, auth=None):
                         "avatar": user.avatar
                     }
                     print(f"🔐 用户已认证: {user.nickname} (@{user.username})")
-                else:
-                    print(f"⚠️ Token有效但用户不存在: {username}")
-        else:
-            print(f"⚠️ Token 无效/过期: {sid}")
-    else:
-        print(f"👤 游客连接: {sid}")
+    
+    # 🌟 修复：强制认证，拒绝游客 (防止同号多开导致逻辑混乱)
+    if not user_info["username"]:
+        print(f"⛔ 拒绝匿名/无效连接: {sid}")
+        return False # 拒绝连接
 
-    # 将查到的信息存入 Socket 会话，供后续 join_room 使用
     await sio.save_session(sid, user_info)
+    
+    # 连接成功，广播大厅 (虽然此时用户还没进任何房间，但大厅人数可能需要统计)
+    await broadcast_lobby()
 
 @sio.event
 async def disconnect(sid):
     room = room_manager.get_player_room(sid)
     if room:
-        room.remove_player(sid)
-        await sio.leave_room(sid, room.room_id)
-        if not room.players:
-            room_manager.remove_room(room.room_id)
+        # 情况 A: 游戏正在进行
+        if room.is_started:
+            # 执行中途逃跑逻辑 (判负、转移房主、强制结束回合)
+            msg = room.handle_disconnect_during_game(sid)
+            await notify_room(room.room_id, msg)
+            await sio.leave_room(sid, room.room_id)
+            
+            # 🌟 核心修复：清理僵尸房间
+            # 如果房间里已经没有活人了 (alive_count == 0)，直接销毁房间
+            # 这样大厅就不会一直显示“激战中”了
+            alive_count = len([p for p in room.players if p.is_alive])
+            
+            if alive_count == 0:
+                print(f"🏚️ 房间 {room.room_id} 全员阵亡/逃跑，强制销毁")
+                room_manager.remove_room(room.room_id)
+            else:
+                # 还有活人，广播更新后的状态
+                await broadcast_room_state(room)
+        
+        # 情况 B: 游戏在大厅/已结束
         else:
-            await notify_room(room.room_id, "一名玩家离开了战场")
-            await broadcast_room_state(room)
+            room.remove_player(sid)
+            await sio.leave_room(sid, room.room_id)
+            
+            if not room.players:
+                print(f"🏠 房间 {room.room_id} 人去楼空，销毁")
+                room_manager.remove_room(room.room_id)
+            else:
+                await notify_room(room.room_id, "一名玩家离开了战场")
+                await broadcast_room_state(room)
+    
+    # 🌟 无论何种情况，有人断开都会影响大厅显示，广播大厅
+    await broadcast_lobby()
 
 @sio.event
 async def join_room(sid, data):
     room_id = data.get("room_id")
-    if not room_id:
-        return await notify_error(sid, "请输入合法的房间号")
+    if not room_id: return await notify_error(sid, "请输入合法的房间号")
 
     room = room_manager.create_room(room_id)
-    
-    # 🌟 关键修改：从 Session 取出刚才存的用户信息
     session = await sio.get_session(sid)
     user_info = session if session else {}
     
-    # 将 user_info 传递给 add_player (下一步我们需要修改 room.py 来接收它)
     success, msg = room.add_player(sid, user_info)
-    
-    if not success:
-        return await notify_error(sid, msg)
+    if not success: return await notify_error(sid, msg)
 
     nickname = user_info.get("nickname", "未知玩家")
     await sio.enter_room(sid, room_id)
     await notify_room(room_id, f"玩家 [{nickname}] 进入了房间")
+    
     await broadcast_room_state(room)
+    # 🌟 房间人数+1，广播大厅
+    await broadcast_lobby()
+
+@sio.event
+async def leave_room(sid, data):
+    """前端主动点击“离开”按钮"""
+    room = room_manager.get_player_room(sid)
+    if room:
+        if not room.is_started:
+            room.remove_player(sid)
+            await sio.leave_room(sid, room.room_id)
+            if not room.players:
+                room_manager.remove_room(room.room_id)
+            else:
+                await broadcast_room_state(room)
+            
+            # 🌟 房间人数-1，广播大厅
+            await broadcast_lobby()
+        else:
+            # 游戏中点离开，理论上应该走 disconnect 流程
+            # 前端通常在调用这个之前会 resetToLobby，或者 socket 断开
+            pass
+
+@sio.event
+async def get_lobby(sid, data):
+    """前端主动拉取大厅数据"""
+    lobby_data = room_manager.get_lobby_info()
+    await sio.emit('lobby_update', lobby_data, room=sid)
 
 @sio.event
 async def toggle_ready(sid, data):
@@ -150,6 +204,8 @@ async def kick_player(sid, data):
             await sio.emit('kicked', {}, room=target_sid)
             await sio.leave_room(target_sid, room.room_id)
             await broadcast_room_state(room)
+            # 🌟 房间人数-1，广播大厅
+            await broadcast_lobby()
         else:
             await notify_error(sid, msg)
 
@@ -159,13 +215,30 @@ async def start_game(sid, data):
     if not room: return
     success, msg = room.start_game()
     if success:
-        await sio.emit('game_started', {}, room=room.room_id)
-        await notify_room(room.room_id, "⚔️ 乱世开启，各显神通！")
+        await notify_room(room.room_id, msg)
         await broadcast_room_state(room)
+        # 🌟 房间状态变为 Playing，广播大厅
+        await broadcast_lobby()
     else:
         await notify_error(sid, msg)
 
-# === 核心战斗与响应逻辑 (保持不变) ===
+@sio.event
+async def select_general(sid, data):
+    room = room_manager.get_player_room(sid)
+    if not room: return
+    general_id = data.get("general_id")
+    if not general_id: return
+    
+    success, msg = room.select_general(sid, general_id)
+    if success:
+        await broadcast_room_state(room)
+        if "游戏开始" in msg:
+             await sio.emit('game_started', {}, room=room.room_id)
+             await notify_room(room.room_id, "⚔️ 众将归位，乱世开启！")
+        else:
+             await sio.emit('system_message', {'msg': "✅ 武将选择已确认，等待他人..."}, room=sid)
+    else:
+        await notify_error(sid, msg)
 
 @sio.event
 async def play_card(sid, data):
@@ -183,7 +256,7 @@ async def play_card(sid, data):
     }, room=room.room_id)
 
     p_src = room.get_player(sid)
-    src_name = p_src.nickname # 使用昵称播报
+    src_name = p_src.nickname 
     if card.name == "杀":
         p_target = room.get_player(target)
         await notify_room(room.room_id, f"⚔️ {src_name} 对 {p_target.nickname} 发起攻击")

@@ -3,7 +3,7 @@ import { computed } from 'vue';
 
 // 接收父组件传来的状态
 const props = defineProps({
-  player: Object,      // 包含 sid, seat_id, hp, card_count, equips, avatar, nickname, username 等
+  player: Object,      // 包含 sid, seat_id, hp, card_count, equips, avatar, nickname, username, kingdom 等
   isCurrent: Boolean,  // 是否是当前回合
   isSelected: Boolean, // 是否被我选中为目标
   isMe: Boolean        // 是否是玩家自己
@@ -17,11 +17,10 @@ const slotLabels = {
   horse_minus: "追"
 };
 
-// 头像路径处理：如果没有头像，使用默认图
+// 头像路径处理
 const avatarUrl = computed(() => {
+  if (!props.player) return ''; // 🛡️ 防御性检查
   const filename = props.player.avatar || 'default.png';
-  // 假设你的 public/avatars 目录下有图片，或者你使用外部链接
-  // 这里暂时用一个占位图服务演示，你可以改成 `/avatars/${filename}`
   if (filename === 'default.png') return 'https://api.dicebear.com/7.x/adventurer/svg?seed=' + props.player.sid;
   return `/avatars/${filename}`;
 });
@@ -33,17 +32,35 @@ const borderColor = computed(() => {
   if (props.isMe) return '#3498db';       // 蓝色自己
   return '#444';                          // 默认灰色
 });
+
+// 阵营样式映射
+const kingdomStyle = computed(() => {
+  if (!props.player) return { bg: '#000', text: '?', border: '#333' }; // 🛡️ 防御性检查
+  const k = props.player.kingdom || 'god';
+  const map = {
+    wei: { bg: '#2980b9', text: '魏', border: '#2c3e50' }, // 魏-蓝
+    shu: { bg: '#c0392b', text: '蜀', border: '#7f2f2f' }, // 蜀-红
+    wu:  { bg: '#27ae60', text: '吴', border: '#1e5430' }, // 吴-绿
+    qun: { bg: '#95a5a6', text: '群', border: '#555' },    // 群-灰
+    god: { bg: '#000', text: '?', border: '#333' }
+  };
+  return map[k] || map.god;
+});
 </script>
 
 <template>
-  <div class="player-avatar-wrapper">
+  <div class="player-avatar-wrapper" v-if="player">
     <div 
       class="avatar-card" 
       :style="{ borderColor: borderColor }"
-      :class="{ 'card-active': isCurrent, 'card-selected': isSelected }"
+      :class="{ 'card-active': isCurrent, 'card-selected': isSelected, 'card-dead': !player.is_alive }"
     >
       <img :src="avatarUrl" class="avatar-img" alt="avatar" />
       
+      <div class="kingdom-badge" :style="{ backgroundColor: kingdomStyle.bg, borderBottomColor: kingdomStyle.border }">
+        {{ kingdomStyle.text }}
+      </div>
+
       <div class="card-overlay"></div>
 
       <div class="seat-badge">{{ player.seat_id }}号</div>
@@ -54,11 +71,15 @@ const borderColor = computed(() => {
       
       <div class="stats-panel">
         <div class="stat-item hp" :class="{ 'low-hp': player.hp <= 1 }">
-          <span class="icon">❤️</span> {{ player.hp }}
+          <span class="icon">❤️</span> {{ Math.max(0, player.hp) }}
         </div>
         <div class="stat-item hand">
           <span class="icon">🎴</span> {{ player.card_count }}
         </div>
+      </div>
+      
+      <div v-if="!player.is_alive" class="dead-mask">
+        <span>阵亡</span>
       </div>
     </div>
 
@@ -116,6 +137,40 @@ const borderColor = computed(() => {
   border-color: #e74c3c !important;
 }
 
+/* 死亡样式 */
+.card-dead {
+  filter: grayscale(1); /* 黑白滤镜 */
+  opacity: 0.8;
+  border-color: #2c3e50 !important;
+  box-shadow: none !important;
+  transform: none !important;
+  cursor: default;
+}
+
+.dead-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+
+.dead-mask span {
+  color: #c0392b;
+  font-size: 24px;
+  font-weight: bold;
+  font-family: "KaiTi", serif;
+  border: 3px solid #c0392b;
+  padding: 2px 8px;
+  border-radius: 4px;
+  transform: rotate(-15deg);
+  text-shadow: 0 2px 4px #000;
+  letter-spacing: 2px;
+}
+
 /* === 内部元素 === */
 .avatar-img {
   width: 100%;
@@ -131,6 +186,26 @@ const borderColor = computed(() => {
   inset: 0;
   background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 40%, transparent 100%);
   z-index: 2;
+}
+
+/* 阵营角标 */
+.kingdom-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 22px;
+  height: 22px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom-left-radius: 6px;
+  z-index: 5;
+  box-shadow: -1px 1px 3px rgba(0,0,0,0.5);
+  font-family: "KaiTi", serif;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.5);
 }
 
 .seat-badge {

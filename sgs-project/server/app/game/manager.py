@@ -1,9 +1,9 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from .room import GameRoom
 
 class RoomManager:
     def __init__(self):
-        # 存储所有房间: { "room_101": GameRoom对象 }
+        # 存储所有活跃房间: { "101": GameRoom对象 }
         self.rooms: Dict[str, GameRoom] = {}
 
     def create_room(self, room_id: str) -> GameRoom:
@@ -25,6 +25,31 @@ class RoomManager:
             if room.get_player(sid):
                 return room
         return None
+
+    # 🌟 新增：获取大厅列表数据 (默认 1-20 号房)
+    def get_lobby_info(self) -> List[Dict]:
+        lobby_list = []
+        # 默认展示 20 个房间
+        for i in range(1, 21):
+            rid = str(i) # 房间号 "1", "2"... "20"
+            room = self.rooms.get(rid)
+            
+            if room:
+                lobby_list.append({
+                    "room_id": rid,
+                    "status": "playing" if room.is_started else "waiting",
+                    "count": len(room.players),
+                    "max_count": 8
+                })
+            else:
+                # 房间未创建，视为空闲
+                lobby_list.append({
+                    "room_id": rid,
+                    "status": "idle",
+                    "count": 0,
+                    "max_count": 8
+                })
+        return lobby_list
 
 # 全局单例
 room_manager = RoomManager()

@@ -1,38 +1,38 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { socket } from './services/socket';
-import { useUserStore } from './stores/userStore'; // 引入用户状态
+import { useUserStore } from './stores/userStore'; 
 import GameCard from './components/GameCard.vue';
 import PlayerAvatar from './components/PlayerAvatar.vue';
-import Login from './components/Login.vue'; // 引入登录组件
+import Login from './components/Login.vue'; 
+import GeneralSelector from './components/GeneralSelector.vue';
+import RoomList from './components/RoomList.vue'; 
 
 // === 0. 用户系统集成 ===
 const userStore = useUserStore();
 
-// 监听登录状态：一旦登录成功，带着 Token 连接 Socket
 watch(() => userStore.isLoggedIn, (newVal) => {
   if (newVal && userStore.token) {
-    socket.auth = { token: userStore.token }; // 注入 Token
+    socket.auth = { token: userStore.token }; 
     socket.connect();
   } else {
-    socket.disconnect(); // 登出断开
+    socket.disconnect(); 
   }
 });
 
 // === 1. 数据基础状态 ===
 const inRoom = ref(false);        
-const roomIdInput = ref("101");   
 const handCards = ref([]);        
-const playedCards = ref([]);      
-const players = ref([]);          
+const playedCards = ref([]);       
+const players = ref([]);           
 const gameState = ref({ 
   phase: 'waiting', 
   current_seat: 0, 
   room_id: '', 
   is_started: false, 
   deck_count: 0,
-  pending: null,    // 核心：存储服务器下发的询问动作
-  winner_sid: null  // 核心：存储胜利者ID
+  pending: null,    
+  winner_sid: null  
 });
 const systemMsg = ref("");        
 
@@ -40,12 +40,16 @@ const systemMsg = ref("");
 const selectedHandIndex = ref(-1);
 const selectedTargetSid = ref(null);
 
+// 🌟 控制个人信息/踢人弹窗
+const showProfileModal = ref(false);
+const currentProfile = ref(null);
+
 // === 3. 计算属性逻辑 ===
 const mySid = computed(() => socket.id);
 const me = computed(() => players.value.find(p => p.sid === mySid.value));
 const isHost = computed(() => me.value?.is_host || false);
 
-// 当前是否轮到我执行“主动出牌”
+// 判断是否轮到我出牌
 const isMyTurn = computed(() => {
   if (!players.value.length || gameState.value.pending || gameState.value.phase === 'game_over') return false; 
   const currentP = players.value.find(p => p.seat_id === gameState.value.current_seat);
@@ -55,14 +59,25 @@ const isMyTurn = computed(() => {
          gameState.value.phase === 'play';
 });
 
-// 当前我是否需要做出“响应操作”（如：对方杀我，我要选闪）
+// 判断是否轮到我响应
 const isMyResponse = computed(() => {
   return gameState.value.pending && gameState.value.pending.target_sid === mySid.value;
 });
 
+// 选将阶段：轮到我选
+const showGeneralSelector = computed(() => {
+  return gameState.value.phase === 'pick_general' && me.value && !me.value.general_id; 
+});
+
+// 选将阶段：等待他人
+const isWaitingOthers = computed(() => {
+  return gameState.value.phase === 'pick_general' && me.value && me.value.general_id;
+});
+
+const hasShan = computed(() => handCards.value.some(c => c.name === '闪'));
+
 // === 4. 生命周期与 Socket 监听 ===
 onMounted(() => {
-  // 修改：只有已登录才连接，否则等待登录成功
   if (userStore.isLoggedIn && userStore.token) {
     socket.auth = { token: userStore.token };
     socket.connect();
@@ -80,7 +95,6 @@ onMounted(() => {
   });
 
   socket.on('room_update', (data) => {
-    console.log("🏠 收到房间数据:", data);
     players.value = data.players;
     gameState.value = data; 
     inRoom.value = true;
@@ -112,25 +126,30 @@ onUnmounted(() => {
 
 // === 5. 交互核心方法 ===
 
-// A. 基础操作
-const joinRoom = () => { 
-  if (roomIdInput.value) socket.emit('join_room', { room_id: roomIdInput.value }); 
+const joinRoom = (roomId) => { 
+  socket.emit('join_room', { room_id: roomId }); 
 };
 
 const toggleReady = () => socket.emit('toggle_ready', {});
 
 const startGame = () => socket.emit('start_game', {});
 
+const onSelectGeneral = (genId) => {
+  socket.emit('select_general', { general_id: genId });
+};
+
 const endTurn = () => {
   if (gameState.value.pending) return showToast("请先完成当前询问");
   socket.emit('end_turn', {});
 };
 
-// B. 返回大厅 (彻底重置)
 const resetToLobby = () => {
-  socket.emit('leave_room', {}); // 通知后端离开
+  socket.emit('leave_room', {}); 
   inRoom.value = false;
-  // 清空所有状态，防止数据污染
+  
+  // 🌟 核心修复：回到大厅时主动拉取一次最新列表
+  socket.emit('get_lobby', {});
+  
   handCards.value = [];
   playedCards.value = [];
   players.value = [];
@@ -141,13 +160,11 @@ const resetToLobby = () => {
   resetSelection();
 };
 
-// C. 主动出牌确认
 const confirmPlay = () => {
   if (selectedHandIndex.value === -1) return;
   const card = handCards.value[selectedHandIndex.value];
   
-  // 必须选目标的牌：杀、顺手、拆桥
-  const needsTarget = ['杀', '顺手牵羊', '过河拆桥'].includes(card.name);
+  const needsTarget = ['杀', '顺手牵羊', '过河拆桥', '决斗'].includes(card.name);
   if (needsTarget && !selectedTargetSid.value) {
     return showToast("⚠️ 请先点击选择一名目标玩家");
   }
@@ -158,7 +175,6 @@ const confirmPlay = () => {
   });
 };
 
-// D. 响应询问操作 (出闪、拆牌位置、顺手位置)
 const respondAction = (useCardIndex = null, area = null) => {
   socket.emit('respond_action', {
     card_index: useCardIndex,
@@ -186,14 +202,87 @@ const showToast = (msg) => {
   setTimeout(() => { systemMsg.value = ""; }, 3000);
 };
 
-// 辅助：检查手牌中是否有闪
-const hasShan = computed(() => handCards.value.some(c => c.name === '闪'));
+// 🌟 头像点击逻辑：区分“选择目标”和“查看信息”
+const handleAvatarClick = (player) => {
+  // 如果处于出牌阶段或响应阶段，点击头像视为选择目标
+  if (gameState.value.is_started && (isMyTurn.value || isMyResponse.value)) {
+    selectTarget(player.sid);
+  } else {
+    // 否则显示个人信息（用于踢人等）
+    openProfile(player);
+  }
+};
+
+const openProfile = (player) => {
+  currentProfile.value = player;
+  showProfileModal.value = true;
+};
+
+const closeProfile = () => {
+  showProfileModal.value = false;
+  currentProfile.value = null;
+};
+
+const kickCurrentPlayer = () => {
+  if (currentProfile.value) {
+    socket.emit('kick_player', { target_sid: currentProfile.value.sid });
+    closeProfile();
+  }
+};
 </script>
 
 <template>
   <div class="sgs-app-root">
     <transition name="fade">
       <div v-if="systemMsg" class="app-toast">{{ systemMsg }}</div>
+    </transition>
+
+    <transition name="zoom">
+      <GeneralSelector 
+        v-if="showGeneralSelector" 
+        :candidates="me?.candidates || []"
+        @select="onSelectGeneral"
+      />
+    </transition>
+
+    <transition name="fade">
+      <div v-if="isWaitingOthers" class="waiting-overlay-full">
+        <div class="waiting-text">
+          <div class="spinner"></div>
+          正在等待其他诸侯点将...
+        </div>
+      </div>
+    </transition>
+
+    <transition name="fade">
+      <div v-if="showProfileModal && currentProfile" class="profile-overlay" @click.self="closeProfile">
+        <div class="profile-card">
+          <div class="profile-header">
+            <span class="p-kingdom" :class="currentProfile.kingdom">{{ currentProfile.kingdom?.toUpperCase() }}</span>
+            <span class="p-name">{{ currentProfile.nickname }}</span>
+          </div>
+          
+          <div class="p-content">
+            <img :src="`/avatars/${currentProfile.avatar}`" class="p-avatar-large">
+            <div class="p-info">
+              <p>账号: {{ currentProfile.username }}</p>
+              <p>武将: {{ currentProfile.general_id ? '已选' : '未选' }}</p>
+              <p>手牌数: {{ currentProfile.card_count }}</p>
+            </div>
+          </div>
+
+          <div class="p-actions">
+            <button 
+              v-if="isHost && currentProfile.sid !== mySid && !gameState.is_started" 
+              class="btn-kick" 
+              @click="kickCurrentPlayer"
+            >
+              👢 踢出房间
+            </button>
+            <button class="btn-close" @click="closeProfile">关闭</button>
+          </div>
+        </div>
+      </div>
     </transition>
 
     <transition name="zoom">
@@ -221,15 +310,7 @@ const hasShan = computed(() => handCards.value.some(c => c.name === '闪'));
         </div>
         <button class="btn-logout" @click="userStore.logout()">注销</button>
       </div>
-
-      <div class="lobby-card">
-        <h1 class="logo">🏯 三国杀 · 硬核交互版</h1>
-        <div class="join-form">
-          <input v-model="roomIdInput" placeholder="输入房号" maxlength="6" @keyup.enter="joinRoom">
-          <button @click="joinRoom" class="btn-join">进入房间</button>
-        </div>
-        <p class="lobby-hint">满2人即可开始，房主需确认全员准备</p>
-      </div>
+      <RoomList @join="joinRoom" />
     </div>
 
     <div v-else class="game-view">
@@ -257,12 +338,12 @@ const hasShan = computed(() => handCards.value.some(c => c.name === '闪'));
               :player="p"
               :is-current="gameState.current_seat === p.seat_id"
               :is-selected="selectedTargetSid === p.sid"
-              @click="selectTarget(p.sid)"
+              @click="handleAvatarClick(p)" 
             />
 
             <div v-if="gameState.pending?.source_sid === mySid && 
-                      (gameState.pending?.action_type === 'ask_for_snatch' || gameState.pending?.action_type === 'ask_for_dismantle') &&
-                      (gameState.pending?.extra_data.target_to_snatch === p.sid || gameState.pending?.extra_data.target_to_dismantle === p.sid)" 
+                       (gameState.pending?.action_type === 'ask_for_snatch' || gameState.pending?.action_type === 'ask_for_dismantle') &&
+                       (gameState.pending?.extra_data.target_to_snatch === p.sid || gameState.pending?.extra_data.target_to_dismantle === p.sid)" 
                  class="interaction-box">
               <div class="box-title">{{ gameState.pending?.action_type === 'ask_for_snatch' ? '顺手牵羊' : '过河拆桥' }}</div>
               <button class="int-btn" @click="respondAction(null, 'hand')">🖐️ 拿手牌</button>
@@ -279,12 +360,34 @@ const hasShan = computed(() => handCards.value.some(c => c.name === '闪'));
       </div>
 
       <div class="board-center">
+        
+        <div v-if="isMyResponse && gameState.pending?.action_type === 'ask_for_skill_confirm'" class="ask-modal-overlay">
+          <div class="ask-card">
+            <h3>⚔️ 技能发动确认</h3>
+            <p>
+              你打出了【{{ gameState.pending.extra_data.origin_name }}】<br>
+              是否发动【{{ gameState.pending.extra_data.skill_name }}】<br>
+              将其转化为【{{ gameState.pending.extra_data.transform_name }}】？
+            </p>
+            <div class="ask-btns">
+              <button class="btn-confirm" @click="respondAction(null, 'use_skill')">
+                确认发动
+              </button>
+              <button class="btn-cancel" @click="respondAction(null, 'cancel')">
+                使用原牌
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div v-if="isMyResponse && gameState.pending?.action_type === 'ask_for_shan'" class="ask-modal-overlay">
           <div class="ask-card">
             <h3>⚔️ 遭受攻击！</h3>
             <p>对方对你出【杀】，是否响应【闪】？</p>
             <div class="ask-btns">
-              <button class="btn-confirm" :disabled="!hasShan" @click="respondAction(handCards.findIndex(c => c.name === '闪'))">出闪</button>
+              <button class="btn-confirm" @click="respondAction(handCards.findIndex(c => c.name === '闪'))">
+                出闪 {{ hasShan ? '' : '(或转化)' }}
+              </button>
               <button class="btn-cancel" @click="respondAction(null)">不出（掉血）</button>
             </div>
           </div>
@@ -333,7 +436,6 @@ const hasShan = computed(() => handCards.value.some(c => c.name === '闪'));
 </template>
 
 <style>
-/* 🌟 全局强制样式重置 */
 html, body {
   margin: 0 !important;
   padding: 0 !important;
@@ -357,6 +459,19 @@ html, body {
 .sgs-app-root { width: 100%; height: 100%; color: #fff; font-family: "PingFang SC", sans-serif; display: flex; flex-direction: column; }
 .app-toast { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: #c0392b; padding: 10px 30px; border-radius: 20px; z-index: 10000; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
 
+/* 等待遮罩 */
+.waiting-overlay-full {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999;
+  display: flex; justify-content: center; align-items: center;
+}
+.waiting-text {
+  font-size: 24px; color: #f1c40f; display: flex; flex-direction: column; align-items: center; gap: 15px;
+}
+.spinner {
+  width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #f1c40f; border-radius: 50%; animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* 胜利大屏 */
 .victory-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; justify-content: center; align-items: center; }
 .victory-modal { background: #111; padding: 60px; border: 2px solid #f1c40f; border-radius: 20px; text-align: center; }
@@ -367,7 +482,7 @@ html, body {
 /* 大厅 */
 .lobby-view { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: radial-gradient(circle, #2c3e50, #000); position: relative; }
 
-/* === 用户信息栏 (新增) === */
+/* 用户信息栏 */
 .user-profile-bar {
   position: absolute; top: 20px; right: 20px;
   display: flex; align-items: center; gap: 15px;
@@ -381,12 +496,6 @@ html, body {
 .user-account { color: #aaa; font-size: 12px; }
 .btn-logout { background: transparent; border: 1px solid #c0392b; color: #c0392b; padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; transition: all 0.2s; }
 .btn-logout:hover { background: #c0392b; color: #fff; }
-
-.lobby-card { background: rgba(255, 255, 255, 0.05); padding: 50px; border-radius: 20px; border: 1px solid #333; text-align: center; }
-.logo { margin-bottom: 30px; letter-spacing: 4px; }
-.join-form { display: flex; gap: 10px; }
-.join-form input { padding: 12px; border: none; border-radius: 5px; width: 120px; text-align: center; font-size: 1.1em; }
-.btn-join { padding: 12px 24px; background: #27ae60; border: none; border-radius: 5px; color: #fff; cursor: pointer; font-size: 1.1em; }
 
 /* 游戏板 */
 .game-view { flex: 1; display: flex; flex-direction: column; position: relative; }
@@ -403,7 +512,6 @@ html, body {
 .opponents-wrapper { display: flex; gap: 40px; }
 .player-slot { position: relative; display: flex; flex-direction: column; align-items: center; }
 
-/* 🌟 核心：抢牌选择框 */
 .interaction-box { 
   position: absolute; bottom: -85px; width: 90px; 
   display: flex; flex-direction: column; gap: 2px; 
@@ -451,7 +559,6 @@ html, body {
 .hand-row .card:hover { transform: translateY(-30px) scale(1.1); z-index: 100; }
 .hand-row .card.selected { transform: translateY(-60px) scale(1.05); border-color: #f1c40f; z-index: 99; box-shadow: 0 0 20px rgba(241,196,15,0.5); }
 
-/* 动画库 */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 .zoom-enter-active { transition: transform 0.5s ease; }
@@ -460,4 +567,26 @@ html, body {
 .card-pop-enter-from { opacity: 0; transform: translateY(30px) scale(0.6); }
 .hand-enter-active { transition: all 0.4s ease; }
 .hand-enter-from { opacity: 0; transform: translateY(100px); }
+
+/* 🌟 个人信息弹窗 */
+.profile-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 3000;
+  display: flex; justify-content: center; align-items: center;
+}
+.profile-card {
+  background: #2c3e50; width: 300px; padding: 20px; border-radius: 8px; border: 2px solid #95a5a6;
+  box-shadow: 0 0 20px rgba(0,0,0,0.8); color: #fff;
+}
+.profile-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; font-size: 20px; font-weight: bold; border-bottom: 1px solid #555; padding-bottom: 10px; }
+.p-kingdom { padding: 2px 6px; border-radius: 4px; font-size: 14px; }
+.p-kingdom.wei { background: #2980b9; } .p-kingdom.shu { background: #c0392b; }
+.p-kingdom.wu { background: #27ae60; } .p-kingdom.qun { background: #7f8c8d; }
+
+.p-content { display: flex; gap: 15px; margin-bottom: 20px; }
+.p-avatar-large { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #fff; object-fit: cover; }
+.p-info p { margin: 5px 0; color: #bdc3c7; font-size: 14px; }
+
+.p-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.btn-kick { background: #c0392b; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+.btn-close { background: #7f8c8d; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
 </style>

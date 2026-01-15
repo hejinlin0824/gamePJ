@@ -1,0 +1,191 @@
+[
+  {
+    "id": "caocao",
+    "name": "曹操",
+    "kingdom": "wei",
+    "max_hp": 4,
+    "skills": ["jianxiong", "hujia"]
+  },
+  {
+    "id": "guojia",
+    "name": "郭嘉",
+    "kingdom": "wei",
+    "max_hp": 3,
+    "skills": ["tiandu", "yiji"]
+  },
+  {
+    "id": "simayi",
+    "name": "司马懿",
+    "kingdom": "wei",
+    "max_hp": 3,
+    "skills": ["fankui", "guicai"]
+  },
+  {
+    "id": "xiahoudun",
+    "name": "夏侯惇",
+    "kingdom": "wei",
+    "max_hp": 4,
+    "skills": ["ganglie"]
+  },
+  {
+    "id": "zhangliao",
+    "name": "张辽",
+    "kingdom": "wei",
+    "max_hp": 4,
+    "skills": ["tuxi"]
+  },
+  {
+    "id": "xuchu",
+    "name": "许褚",
+    "kingdom": "wei",
+    "max_hp": 4,
+    "skills": ["luoyi"]
+  },
+  {
+    "id": "zhenji",
+    "name": "甄姬",
+    "kingdom": "wei",
+    "max_hp": 3,
+    "skills": ["luoshen", "qingguo"]
+  },
+  {
+    "id": "liubei",
+    "name": "刘备",
+    "kingdom": "shu",
+    "max_hp": 4,
+    "skills": ["rende", "jijiang"]
+  },
+  {
+    "id": "guanyu",
+    "name": "关羽",
+    "kingdom": "shu",
+    "max_hp": 4,
+    "skills": ["wusheng"]
+  },
+  {
+    "id": "zhangfei",
+    "name": "张飞",
+    "kingdom": "shu",
+    "max_hp": 4,
+    "skills": ["paoxiao"]
+  },
+  {
+    "id": "zhugeliang",
+    "name": "诸葛亮",
+    "kingdom": "shu",
+    "max_hp": 3,
+    "skills": ["guanxing", "kongcheng"]
+  },
+  {
+    "id": "zhaoyun",
+    "name": "赵云",
+    "kingdom": "shu",
+    "max_hp": 4,
+    "skills": ["longdan"]
+  },
+  {
+    "id": "machao",
+    "name": "马超",
+    "kingdom": "shu",
+    "max_hp": 4,
+    "skills": ["mashu", "tieqi"]
+  },
+  {
+    "id": "huangyueying",
+    "name": "黄月英",
+    "kingdom": "shu",
+    "max_hp": 3,
+    "skills": ["jizhi", "qicai"]
+  },
+  {
+    "id": "sunquan",
+    "name": "孙权",
+    "kingdom": "wu",
+    "max_hp": 4,
+    "skills": ["zhiheng", "jiuyuan"]
+  },
+  {
+    "id": "ganning",
+    "name": "甘宁",
+    "kingdom": "wu",
+    "max_hp": 4,
+    "skills": ["qixi"]
+  },
+  {
+    "id": "lvmeng",
+    "name": "吕蒙",
+    "kingdom": "wu",
+    "max_hp": 4,
+    "skills": ["keji"]
+  },
+  {
+    "id": "huanggai",
+    "name": "黄盖",
+    "kingdom": "wu",
+    "max_hp": 4,
+    "skills": ["kurou"]
+  },
+  {
+    "id": "zhouyu",
+    "name": "周瑜",
+    "kingdom": "wu",
+    "max_hp": 4,
+    "skills": ["yingzi", "fanjian"]
+  },
+  {
+    "id": "daqiao",
+    "name": "大乔",
+    "kingdom": "wu",
+    "max_hp": 3,
+    "skills": ["guose", "liuli"]
+  },
+  {
+    "id": "luxun",
+    "name": "陆逊",
+    "kingdom": "wu",
+    "max_hp": 3,
+    "skills": ["qianxun", "lianying"]
+  },
+  {
+    "id": "sunshangxiang",
+    "name": "孙尚香",
+    "kingdom": "wu",
+    "max_hp": 3,
+    "skills": ["jieyin", "xiaoji"]
+  },
+  {
+    "id": "huatuo",
+    "name": "华佗",
+    "kingdom": "qun",
+    "max_hp": 3,
+    "skills": ["qingnang", "jijiu"]
+  },
+  {
+    "id": "lvbu",
+    "name": "吕布",
+    "kingdom": "qun",
+    "max_hp": 4,
+    "skills": ["wushuang"]
+  },
+  {
+    "id": "diaochan",
+    "name": "貂蝉",
+    "kingdom": "qun",
+    "max_hp": 3,
+    "skills": ["lijian", "biyue"]
+  },
+  {
+    "id": "yuanshu",
+    "name": "袁术",
+    "kingdom": "qun",
+    "max_hp": 4,
+    "skills": ["yongsi", "weidi"]
+  },
+  {
+    "id": "huaxiong",
+    "name": "华雄",
+    "kingdom": "qun",
+    "max_hp": 5,
+    "skills": ["yaowu", "fuyong"]
+  }
+]
