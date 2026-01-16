@@ -8,7 +8,7 @@ from sqlmodel import Session, select
 from app.core.database import create_db_and_tables, engine 
 from app.api.auth import router as auth_router
 from app.core.security import decode_access_token
-from app.models.user import User       
+from app.models.user import User        
 
 from app.game.manager import room_manager
 from app.game.room import GamePhase
@@ -38,7 +38,7 @@ socket_app = socketio.ASGIApp(sio, app)
 
 @app.get("/")
 async def root():
-    return {"status": "ok", "version": "SGS Hardcore Engine v5.6 (Leave Button Fix)"}
+    return {"status": "ok", "version": "SGS Hardcore Engine v7.0 (Active Skills)"}
 
 # === 2. 状态同步与系统通知工具 ===
 
@@ -55,9 +55,10 @@ async def broadcast_room_state(room):
 
     await sio.emit('room_update', state, room=room.room_id)
     
-    # 私有手牌数据单独发送
+    # 私有手牌数据单独发送 (安全机制)
     for p in room.players:
         if p.is_alive:
+            # 序列化 Card 对象
             cards_data = [c.model_dump() for c in p.hand_cards]
             await sio.emit('hand_update', {'cards': cards_data}, room=p.sid)
 
@@ -72,7 +73,7 @@ async def broadcast_lobby():
     lobby_data = room_manager.get_lobby_info()
     await sio.emit('lobby_update', lobby_data)
 
-# === 3. 基础房间管理事件 ===
+# === 3. Socket 事件处理 ===
 
 @sio.event
 async def connect(sid, environ, auth=None):
@@ -102,10 +103,11 @@ async def connect(sid, environ, auth=None):
 
 @sio.event
 async def disconnect(sid):
-    """处理意外断开连接（刷新页面、关闭浏览器）"""
+    """处理意外断开连接"""
     room = room_manager.get_player_room(sid)
     if room:
         if room.is_started:
+            # 游戏进行中：触发逃跑逻辑，可能导致游戏结束
             msg = room.handle_disconnect_during_game(sid)
             await notify_room(room.room_id, msg)
             await sio.leave_room(sid, room.room_id)
@@ -115,11 +117,11 @@ async def disconnect(sid):
             if len(alive_players) == 0:
                 print(f"💀 房间 {room.room_id} 无人生还，强制销毁")
                 room_manager.remove_room(room.room_id)
-            elif room.phase == GamePhase.GAME_OVER:
-                await broadcast_room_state(room)
             else:
+                # 无论是否结束，都需要广播状态
                 await broadcast_room_state(room)
         else:
+            # 游戏未开始：正常离开
             room.remove_player(sid)
             await sio.leave_room(sid, room.room_id)
             
@@ -156,43 +158,27 @@ async def leave_room(sid, data):
     """前端主动点击“离开”按钮"""
     room = room_manager.get_player_room(sid)
     if room:
-        # === 场景 A：游戏未开始（大厅等待中） ===
         if not room.is_started:
             room.remove_player(sid)
             await sio.leave_room(sid, room.room_id)
-            
             if not room.players:
-                print(f"🏠 房间 {room.room_id} 人去楼空，销毁")
                 room_manager.remove_room(room.room_id)
             else:
                 await broadcast_room_state(room)
-            
             await broadcast_lobby()
-            
-        # === 场景 B：游戏进行中（中途逃跑） ===
         else:
-            # 🌟 核心改进：这里不再是 pass，而是执行完整的逃跑/死亡结算逻辑
+            # 游戏进行中逃跑逻辑
             print(f"👋 玩家 {sid} 主动点击离开按钮")
-            
-            # 1. 逻辑判负与遗产分配
             msg = room.handle_disconnect_during_game(sid)
             await notify_room(room.room_id, msg)
             await sio.leave_room(sid, room.room_id)
             
-            # 2. 检查是否需要销毁房间
             alive_players = [p for p in room.players if p.is_alive]
-            
             if len(alive_players) == 0:
-                print(f"💀 房间 {room.room_id} 无人生还，强制销毁")
                 room_manager.remove_room(room.room_id)
-            elif room.phase == GamePhase.GAME_OVER:
-                # 游戏结束，广播最后状态
-                await broadcast_room_state(room)
             else:
-                # 游戏继续，广播新状态（移交回合后）
                 await broadcast_room_state(room)
             
-            # 3. 立即刷新大厅列表（解决你遇到的“必须刷新页面才释放房间”的问题）
             await broadcast_lobby()
 
 @sio.event
@@ -255,22 +241,28 @@ async def select_general(sid, data):
 async def play_card(sid, data):
     room = room_manager.get_player_room(sid)
     if not room: return
+    
     idx = data.get("card_index")
     target = data.get("target_sid")
+    
     success, msg, card = room.play_card(sid, idx, target)
     if not success: return await notify_error(sid, msg)
 
-    await sio.emit('player_played', {
-        "player_id": sid,
-        "target_id": target,
-        "card": card.model_dump()
-    }, room=room.room_id)
+    # 广播打出的牌动画
+    if card:
+        await sio.emit('player_played', {
+            "player_id": sid,
+            "target_id": target,
+            "card": card.model_dump()
+        }, room=room.room_id)
 
+    # 系统日志通知
     p_src = room.get_player(sid)
     src_name = p_src.nickname 
     if card.name == "杀":
         p_target = room.get_player(target)
-        await notify_room(room.room_id, f"⚔️ {src_name} 对 {p_target.nickname} 发起攻击")
+        if p_target:
+            await notify_room(room.room_id, f"⚔️ {src_name} 对 {p_target.nickname} 发起攻击")
     elif card.name == "顺手牵羊":
         await notify_room(room.room_id, f"🤏 {src_name} 正在实施【顺手牵羊】")
     elif card.name == "过河拆桥":
@@ -282,13 +274,40 @@ async def play_card(sid, data):
 
 @sio.event
 async def respond_action(sid, data):
+    """
+    处理玩家的响应操作（出闪、弃牌、遗计分牌等）
+    """
     room = room_manager.get_player_room(sid)
     if not room: return
+    
     index = data.get("card_index")
     area = data.get("target_area")
-    success, msg = room.handle_response(sid, index, area)
+    extra = data.get("extra_payload") # 🌟 核心：接收前端传来的复杂参数（如弃牌列表）
+    
+    success, msg = room.handle_response(sid, index, target_area=area, extra_payload=extra)
     if success:
-        await notify_room(room.room_id, f"📢 {msg}")
+        if msg:
+            await notify_room(room.room_id, f"📢 {msg}")
+        await broadcast_room_state(room)
+    else:
+        await notify_error(sid, msg)
+
+@sio.event
+async def use_skill(sid, data):
+    """
+    🌟 核心新增：处理主动技能释放 (如离间、青囊)
+    """
+    room = room_manager.get_player_room(sid)
+    if not room: return
+    
+    skill_name = data.get("skill_name")
+    targets = data.get("targets") or []
+    card_indices = data.get("card_indices") or []
+    
+    success, msg = room.trigger_active_skill(sid, skill_name, targets, card_indices)
+    
+    if success:
+        await notify_room(room.room_id, f"⚡ {msg}")
         await broadcast_room_state(room)
     else:
         await notify_error(sid, msg)
